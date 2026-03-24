@@ -11,6 +11,7 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import AuthModal from './AuthModal'
+import SaveModal from './SaveModal'
 
 type AuthContextType = {
   user: User | null
@@ -20,6 +21,7 @@ type AuthContextType = {
   openAuthModal: (mode?: 'login' | 'register') => void
   signOut: () => Promise<void>
   toggleLike: (photoId: string) => Promise<void>
+  openSaveModal: (photoId: string) => void
   toggleSave: (photoId: string) => Promise<void>
 }
 
@@ -31,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   openAuthModal: () => {},
   signOut: async () => {},
   toggleLike: async () => {},
+  openSaveModal: () => {},
   toggleSave: async () => {},
 })
 
@@ -52,6 +55,7 @@ export function AuthProvider({
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'login' | 'register'>('login')
+  const [saveModalPhotoId, setSaveModalPhotoId] = useState<string | null>(null)
 
   const loadUserData = useCallback(
     async (userId: string) => {
@@ -70,9 +74,7 @@ export function AuthProvider({
   }, [user, loadUserData])
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (!session) {
@@ -111,6 +113,16 @@ export function AuthProvider({
     [user, likedIds, openAuthModal, supabase]
   )
 
+  // Opens the SaveModal — if already saved, toggles directly (unsave)
+  const openSaveModal = useCallback(
+    (photoId: string) => {
+      if (!user) { openAuthModal(); return }
+      setSaveModalPhotoId(photoId)
+    },
+    [user, openAuthModal]
+  )
+
+  // Direct toggle (used by TattooActions in detail page)
   const toggleSave = useCallback(
     async (photoId: string) => {
       if (!user) { openAuthModal(); return }
@@ -129,9 +141,32 @@ export function AuthProvider({
     [user, savedIds, openAuthModal, supabase]
   )
 
+  // Called by SaveModal after user picks a board
+  const handleSaved = useCallback(
+    async (carpetaId?: string) => {
+      if (!user || !saveModalPhotoId) return
+      const isSaved = savedIds.has(saveModalPhotoId)
+      if (!isSaved) {
+        setSavedIds(prev => new Set(prev).add(saveModalPhotoId))
+        await supabase.from('saves').insert({
+          user_id: user.id,
+          photo_id: saveModalPhotoId,
+          carpeta_id: carpetaId ?? null,
+        })
+      }
+    },
+    [user, saveModalPhotoId, savedIds, supabase]
+  )
+
+  const handleUnsave = useCallback(async () => {
+    if (!user || !saveModalPhotoId) return
+    setSavedIds(prev => { const n = new Set(prev); n.delete(saveModalPhotoId); return n })
+    await supabase.from('saves').delete().eq('user_id', user.id).eq('photo_id', saveModalPhotoId)
+  }, [user, saveModalPhotoId, supabase])
+
   return (
     <AuthContext.Provider
-      value={{ user, session, likedIds, savedIds, openAuthModal, signOut, toggleLike, toggleSave }}
+      value={{ user, session, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave }}
     >
       {children}
       {modalOpen && (
@@ -139,6 +174,15 @@ export function AuthProvider({
           mode={modalMode}
           onClose={() => setModalOpen(false)}
           onSwitchMode={setModalMode}
+        />
+      )}
+      {saveModalPhotoId && (
+        <SaveModal
+          photoId={saveModalPhotoId}
+          isSaved={savedIds.has(saveModalPhotoId)}
+          onClose={() => setSaveModalPhotoId(null)}
+          onSaved={handleSaved}
+          onUnsave={handleUnsave}
         />
       )}
     </AuthContext.Provider>

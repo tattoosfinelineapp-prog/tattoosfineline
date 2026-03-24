@@ -8,7 +8,7 @@ import type { Tattoo } from '@/lib/data'
 import { useAuth } from './AuthContext'
 
 export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
-  const { user, likedIds, savedIds, toggleLike, toggleSave, openAuthModal } = useAuth()
+  const { user, likedIds, savedIds, toggleLike, openSaveModal, openAuthModal } = useAuth()
   const [hovered, setHovered] = useState(false)
 
   const isLiked = likedIds.has(tattoo.id)
@@ -23,7 +23,7 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    user ? toggleSave(tattoo.id) : openAuthModal()
+    user ? openSaveModal(tattoo.id) : openAuthModal()
   }
 
   return (
