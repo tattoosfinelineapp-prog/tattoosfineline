@@ -1,7 +1,7 @@
 import GaleriaHome from '@/components/GaleriaHome'
 import { getPhotos } from '@/lib/queries'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   const tattoos = await getPhotos()

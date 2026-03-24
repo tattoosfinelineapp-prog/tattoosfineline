@@ -43,17 +43,20 @@ function mapPhoto(row: PhotoRow): Tattoo {
 export async function getPhotos(limit = 300): Promise<Tattoo[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  console.log('[getPhotos] url:', url ? url.slice(0, 30) + '...' : 'MISSING')
+  console.log('[getPhotos] key:', key ? 'SET' : 'MISSING')
   if (!url || !key) {
     console.warn('[Supabase] Missing env vars — skipping fetch')
     return []
   }
   const supabase = getClient()
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('photos')
-    .select('id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)')
-    .eq('status', 'published')
+    .select('id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)', { count: 'exact' })
     .order('created_at', { ascending: false })
     .limit(limit)
+
+  console.log('[getPhotos] count:', count, 'rows:', data?.length, 'error:', error?.message)
 
   if (error) {
     console.error('[Supabase] Error fetching photos:', error.message)
