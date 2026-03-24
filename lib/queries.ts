@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Tattoo } from './data'
 
-// Cliente con las keys directas como fallback si las env vars no están disponibles en build
 function getClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
   return createClient(url, key)
+}
+
+function hasEnvVars() {
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 }
 
 type PhotoRow = {
@@ -21,6 +24,16 @@ type PhotoRow = {
   height: number | null
   tatuador_id: string | null
   users: { nombre: string | null } | null
+}
+
+export type UserProfile = {
+  id: string
+  nombre: string | null
+  email: string
+  avatar: string | null
+  bio: string | null
+  instagram: string | null
+  tipo: string
 }
 
 function mapPhoto(row: PhotoRow): Tattoo {
@@ -40,48 +53,94 @@ function mapPhoto(row: PhotoRow): Tattoo {
   }
 }
 
+const SELECT_PHOTO = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)'
+
 export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  console.log('[getPhotos] url:', url ? url.slice(0, 30) + '...' : 'MISSING')
-  console.log('[getPhotos] key:', key ? 'SET' : 'MISSING')
-  if (!url || !key) {
-    console.warn('[Supabase] Missing env vars — skipping fetch')
-    return []
-  }
-  const supabase = getClient()
-  const { data, error, count } = await supabase
+  if (!hasEnvVars()) return []
+  const { data, error } = await getClient()
     .from('photos')
-    .select('id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)', { count: 'exact' })
+    .select(SELECT_PHOTO)
     .order('created_at', { ascending: false })
     .limit(limit)
+  if (error) { console.error('[getPhotos]', error.message); return [] }
+  return (data as unknown as PhotoRow[]).map(mapPhoto)
+}
 
-  console.log('[getPhotos] count:', count, 'rows:', data?.length, 'error:', error?.message)
+export async function getPhotoById(id: string): Promise<Tattoo | null> {
+  if (!hasEnvVars()) return null
+  const { data, error } = await getClient()
+    .from('photos')
+    .select(SELECT_PHOTO)
+    .eq('id', id)
+    .single()
+  if (error || !data) return null
+  return mapPhoto(data as unknown as PhotoRow)
+}
 
-  if (error) {
-    console.error('[Supabase] Error fetching photos:', error.message)
-    return []
-  }
-
+export async function getSimilarPhotos(motivo: string, currentId: string, limit = 12): Promise<Tattoo[]> {
+  if (!hasEnvVars() || !motivo) return []
+  const { data, error } = await getClient()
+    .from('photos')
+    .select(SELECT_PHOTO)
+    .eq('motivo', motivo)
+    .neq('id', currentId)
+    .order('likes', { ascending: false })
+    .limit(limit)
+  if (error) return []
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
 
 export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return []
-  const supabase = getClient()
-  const { data, error } = await supabase
+  if (!hasEnvVars()) return []
+  const { data, error } = await getClient()
     .from('photos')
-    .select('id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)')
+    .select(SELECT_PHOTO)
     .eq('tatuador_id', tatuador_id)
-    .eq('status', 'published')
     .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('[Supabase] Error fetching by tatuador:', error.message)
-    return []
-  }
-
+  if (error) { console.error('[getPhotosByTatuador]', error.message); return [] }
   return (data as unknown as PhotoRow[]).map(mapPhoto)
+}
+
+export async function getUserById(userId: string): Promise<UserProfile | null> {
+  if (!hasEnvVars()) return null
+  const { data, error } = await getClient()
+    .from('users')
+    .select('id, nombre, email, avatar, bio, instagram, tipo')
+    .eq('id', userId)
+    .single()
+  if (error || !data) return null
+  return data as UserProfile
+}
+
+export async function getSavedPhotos(userId: string): Promise<Tattoo[]> {
+  if (!hasEnvVars()) return []
+  const { data, error } = await getClient()
+    .from('saves')
+    .select(`photo_id, photos:photo_id(${SELECT_PHOTO})`)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return (data as unknown as { photos: PhotoRow }[])
+    .map(r => r.photos)
+    .filter(Boolean)
+    .map(mapPhoto)
+}
+
+export type Carpeta = {
+  id: string
+  nombre: string
+  user_id: string
+  created_at: string
+  count?: number
+}
+
+export async function getCarpetas(userId: string): Promise<Carpeta[]> {
+  if (!hasEnvVars()) return []
+  const { data, error } = await getClient()
+    .from('carpetas')
+    .select('id, nombre, user_id, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data as Carpeta[]
 }
