@@ -47,6 +47,7 @@ export default function UploadPage() {
   const [analyzeProgress, setAnalyzeProgress] = useState(0)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [dragOver, setDragOver] = useState(false)
+  const [consent, setConsent] = useState(false)
   const [tagInput, setTagInput] = useState<Record<string, string>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -243,11 +244,27 @@ export default function UploadPage() {
               )}
             </div>
 
+            {/* Consent checkbox */}
+            <label className="flex items-start gap-3 p-4 bg-gray-50 rounded-2xl cursor-pointer mb-4 border border-gray-100 hover:border-gray-200 transition-colors">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={e => setConsent(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded accent-gray-900 cursor-pointer shrink-0"
+              />
+              <span className="text-sm text-gray-600 leading-relaxed">
+                Confirmo que tengo permiso para publicar estas imágenes y que{' '}
+                <span className="font-medium text-gray-800">no contienen caras identificables sin consentimiento</span>.
+                Recomendamos subir fotos del tatuaje sin mostrar el rostro completo.
+              </span>
+            </label>
+
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500">{items.length} foto{items.length !== 1 ? 's' : ''} seleccionada{items.length !== 1 ? 's' : ''}</p>
               <button
                 onClick={analyzeAll}
-                className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-2xl hover:bg-gray-800 transition-colors"
+                disabled={!consent}
+                className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-2xl hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Analizar con IA
                 <ChevronRight size={16} />

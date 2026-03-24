@@ -18,6 +18,13 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .masonry-grid {
   display: flex;
   margin-left: -12px;

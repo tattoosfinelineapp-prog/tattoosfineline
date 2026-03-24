@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import GaleriaGrid from './GaleriaGrid'
 import type { Tattoo } from '@/lib/data'
 
-const PAGE_SIZE = 24
+const PAGE_SIZE = 20
 
 type Props = {
   initialPhotos: Tattoo[]
