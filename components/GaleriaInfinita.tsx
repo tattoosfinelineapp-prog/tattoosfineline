@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import GaleriaGrid from './GaleriaGrid'
 import type { Tattoo } from '@/lib/data'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 24
 
 type Props = {
   initialPhotos: Tattoo[]
@@ -44,6 +44,10 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
     const sentinel = sentinelRef.current
     if (!sentinel) return
 
+    // Small delay prevents the observer from firing synchronously on mount
+    // when the initial batch doesn't fill the full viewport
+    let timeout: ReturnType<typeof setTimeout>
+
     const observer = new IntersectionObserver(
       async ([entry]) => {
         if (!entry.isIntersecting) return
@@ -78,11 +82,12 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
           setLoading(false)
         }
       },
-      { rootMargin: '300px' }
+      { rootMargin: '400px' } // Start fetching ~400px before sentinel reaches viewport
     )
 
-    observer.observe(sentinel)
-    return () => observer.disconnect()
+    // Delay first observation so photos can render before we check sentinel position
+    timeout = setTimeout(() => observer.observe(sentinel), 100)
+    return () => { clearTimeout(timeout); observer.disconnect() }
   }, []) // Only mount/unmount — uses refs for all mutable state
 
   if (photos.length === 0 && !loading) {

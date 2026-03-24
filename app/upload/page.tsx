@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, ImagePlus, Loader2, CheckCircle, AlertCircle, X, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/components/AuthContext'
+import imageCompression from 'browser-image-compression'
 
 const TAGS_SUGERIDOS = [
   'floral', 'minimalista', 'geométrico', 'animales', 'luna', 'mariposa',
@@ -83,6 +84,20 @@ export default function UploadPage() {
     addFiles(e.dataTransfer.files)
   }
 
+  const compressFile = async (file: File): Promise<File> => {
+    try {
+      return await imageCompression(file, {
+        maxSizeMB: 2,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        fileType: 'image/webp',
+        initialQuality: 0.85,
+      })
+    } catch {
+      return file
+    }
+  }
+
   const analyzeAll = async () => {
     setStep('analyze')
     setAnalyzeProgress(0)
@@ -93,8 +108,9 @@ export default function UploadPage() {
       toAnalyze.map(async (item) => {
         setItems(prev => prev.map(it => it.id === item.id ? { ...it, analyzing: true } : it))
         try {
+          const compressed = await compressFile(item.file)
           const fd = new FormData()
-          fd.append('file', item.file)
+          fd.append('file', compressed)
           const res = await fetch('/api/analyze', { method: 'POST', body: fd })
           const json = await res.json()
           setItems(prev => prev.map(it =>
@@ -144,8 +160,9 @@ export default function UploadPage() {
     for (const item of toUpload) {
       updateItem(item.id, { uploading: true })
       try {
+        const compressed = await compressFile(item.file)
         const fd = new FormData()
-        fd.append('file', item.file)
+        fd.append('file', compressed)
         fd.append('titulo', item.titulo)
         fd.append('motivo', item.motivo)
         fd.append('zona', item.zona)

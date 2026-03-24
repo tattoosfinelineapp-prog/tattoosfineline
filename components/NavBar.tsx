@@ -137,6 +137,15 @@ export default function NavBar() {
 
           {/* Auth / User — right */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
+            {!showSearch && (
+              <Link
+                href="/buscar"
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors"
+                title="Buscar"
+              >
+                <Search size={18} />
+              </Link>
+            )}
             {user ? (
               <>
                 <Link

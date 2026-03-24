@@ -87,6 +87,16 @@ export default function AuthModal({ mode, onClose, onSwitchMode }: Props) {
       }).eq('id', data.user.id)
     }
 
+    // Send welcome email (fire and forget — logs to Vercel Functions console)
+    const displayName = tipoCuenta === 'estudio' ? nombreEstudio : nombre
+    fetch('/api/emails/welcome', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, nombre: displayName, tipo_cuenta: tipoCuenta }),
+    })
+      .then(r => r.json().then(d => console.log('[welcome-email] result:', r.status, d)))
+      .catch(e => console.error('[welcome-email] fetch error:', e))
+
     setSuccess('Revisa tu email para confirmar tu cuenta ✉️')
     setLoading(false)
   }

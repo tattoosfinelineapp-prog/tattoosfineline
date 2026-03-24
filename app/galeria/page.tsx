@@ -11,7 +11,7 @@ type Props = {
 
 export default async function GaleriaPage({ searchParams }: Props) {
   const query = searchParams.q?.trim() ?? ''
-  const { photos, total } = await getPhotosPage(0, 20, query || undefined)
+  const { photos, total } = await getPhotosPage(0, 24, query || undefined)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-24">

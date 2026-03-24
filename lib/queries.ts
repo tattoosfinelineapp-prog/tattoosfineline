@@ -34,6 +34,12 @@ export type UserProfile = {
   bio: string | null
   instagram: string | null
   tipo: string
+  tipo_cuenta: string | null
+  username: string | null
+  ciudad: string | null
+  nombre_estudio: string | null
+  direccion: string | null
+  web: string | null
 }
 
 function mapPhoto(row: PhotoRow): Tattoo {
@@ -153,15 +159,60 @@ export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
 
+const SELECT_USER = 'id, nombre, email, avatar, bio, instagram, tipo, tipo_cuenta, username, ciudad, nombre_estudio, direccion, web'
+
 export async function getUserById(userId: string): Promise<UserProfile | null> {
   if (!hasEnvVars()) return null
   const { data, error } = await getClient()
     .from('users')
-    .select('id, nombre, email, avatar, bio, instagram, tipo')
+    .select(SELECT_USER)
     .eq('id', userId)
     .single()
   if (error || !data) return null
   return data as UserProfile
+}
+
+export async function getUserByUsername(username: string): Promise<UserProfile | null> {
+  if (!hasEnvVars()) return null
+  const { data, error } = await getClient()
+    .from('users')
+    .select(SELECT_USER)
+    .eq('username', username)
+    .single()
+  if (error || !data) return null
+  return data as UserProfile
+}
+
+export async function searchUsers(query: string, tipo?: 'tatuador' | 'estudio'): Promise<UserProfile[]> {
+  if (!hasEnvVars()) return []
+  let q = getClient()
+    .from('users')
+    .select(SELECT_USER)
+    .ilike('nombre', `%${query}%`)
+  if (tipo) q = q.eq('tipo_cuenta', tipo)
+  const { data, error } = await q.limit(20)
+  if (error) return []
+  return data as UserProfile[]
+}
+
+export type CarpetaPublica = {
+  id: string
+  nombre: string
+  user_id: string
+  tags_default: string[] | null
+  created_at: string
+  users: { nombre: string | null; username: string | null } | null
+}
+
+export async function searchCarpetas(query: string): Promise<CarpetaPublica[]> {
+  if (!hasEnvVars()) return []
+  const { data, error } = await getClient()
+    .from('carpetas')
+    .select('id, nombre, user_id, tags_default, created_at, users(nombre, username)')
+    .ilike('nombre', `%${query}%`)
+    .limit(20)
+  if (error) return []
+  return data as unknown as CarpetaPublica[]
 }
 
 export async function getSavedPhotos(userId: string): Promise<Tattoo[]> {

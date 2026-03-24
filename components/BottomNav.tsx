@@ -11,7 +11,7 @@ export default function BottomNav() {
 
   const items = [
     { href: '/', icon: Home, label: 'Inicio' },
-    { href: '/galeria', icon: Search, label: 'Galería' },
+    { href: '/buscar', icon: Search, label: 'Buscar' },
     { href: '/upload', icon: Upload, label: 'Subir', requiresAuth: true },
     { href: '/guardar', icon: Bookmark, label: 'Guardados', requiresAuth: true },
     { href: user ? `/perfil/${user.id}` : null, icon: User, label: 'Perfil', requiresAuth: true },
