@@ -41,6 +41,12 @@ function mapPhoto(row: PhotoRow): Tattoo {
 }
 
 export async function getPhotos(limit = 300): Promise<Tattoo[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) {
+    console.warn('[Supabase] Missing env vars — skipping fetch')
+    return []
+  }
   const supabase = getClient()
   const { data, error } = await supabase
     .from('photos')
@@ -58,6 +64,9 @@ export async function getPhotos(limit = 300): Promise<Tattoo[]> {
 }
 
 export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) return []
   const supabase = getClient()
   const { data, error } = await supabase
     .from('photos')
