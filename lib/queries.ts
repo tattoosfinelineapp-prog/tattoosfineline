@@ -40,7 +40,7 @@ function mapPhoto(row: PhotoRow): Tattoo {
   }
 }
 
-export async function getPhotos(limit = 300): Promise<Tattoo[]> {
+export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   console.log('[getPhotos] url:', url ? url.slice(0, 30) + '...' : 'MISSING')
