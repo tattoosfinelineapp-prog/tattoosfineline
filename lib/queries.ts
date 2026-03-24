@@ -1,5 +1,12 @@
-import { supabase } from './supabase'
+import { createClient } from '@supabase/supabase-js'
 import type { Tattoo } from './data'
+
+// Cliente con las keys directas como fallback si las env vars no están disponibles en build
+function getClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  return createClient(url, key)
+}
 
 type PhotoRow = {
   id: string
@@ -26,22 +33,24 @@ function mapPhoto(row: PhotoRow): Tattoo {
     zona: row.zona ?? '',
     tamaño: row.tamaño ?? '',
     tags: row.tags ?? [],
-    tatuador: row.users?.nombre ?? 'Tatuador',
+    tatuador: row.users?.nombre ?? 'Sinkply Tattoo',
     tatuador_id: row.tatuador_id ?? '',
     likes: row.likes ?? 0,
     height: row.height ?? 350,
   }
 }
 
-export async function getPhotos(): Promise<Tattoo[]> {
+export async function getPhotos(limit = 300): Promise<Tattoo[]> {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from('photos')
     .select('id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)')
     .eq('status', 'published')
     .order('created_at', { ascending: false })
+    .limit(limit)
 
   if (error) {
-    console.error('Error fetching photos:', error.message)
+    console.error('[Supabase] Error fetching photos:', error.message)
     return []
   }
 
@@ -49,6 +58,7 @@ export async function getPhotos(): Promise<Tattoo[]> {
 }
 
 export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]> {
+  const supabase = getClient()
   const { data, error } = await supabase
     .from('photos')
     .select('id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)')
@@ -57,7 +67,7 @@ export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Error fetching photos by tatuador:', error.message)
+    console.error('[Supabase] Error fetching by tatuador:', error.message)
     return []
   }
 

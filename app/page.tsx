@@ -1,12 +1,10 @@
 import GaleriaHome from '@/components/GaleriaHome'
 import { getPhotos } from '@/lib/queries'
-import { tattoosSample } from '@/lib/data'
 
 export const revalidate = 60
 
 export default async function Home() {
-  const photosDB = await getPhotos()
-  const tattoos = photosDB.length > 0 ? photosDB : tattoosSample
+  const tattoos = await getPhotos()
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
