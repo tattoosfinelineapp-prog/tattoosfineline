@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Heart, Bookmark, User } from 'lucide-react'
 import type { Tattoo } from '@/lib/data'
 import { useAuth } from './AuthContext'
+import ReportButton from './ReportButton'
 
 export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
   const { user, likedIds, savedIds, toggleLike, openSaveModal, openAuthModal } = useAuth()
@@ -69,9 +70,9 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
           }`}
         />
 
-        {/* Save button — top right */}
+        {/* Top right: Save + Report */}
         <div
-          className={`absolute top-2.5 right-2.5 transition-opacity duration-200 ${
+          className={`absolute top-2.5 right-2.5 flex flex-col gap-1.5 transition-opacity duration-200 ${
             hovered || isSaved ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -85,6 +86,7 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
           >
             <Bookmark size={14} fill={isSaved ? 'currentColor' : 'none'} />
           </button>
+          <ReportButton photoId={tattoo.id} />
         </div>
 
         {/* Bottom overlay: artist + like */}
