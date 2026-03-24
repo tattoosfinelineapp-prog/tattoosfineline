@@ -24,6 +24,14 @@ export async function POST(req: Request) {
   const formData = await req.formData()
   const file = formData.get('file') as File | null
   const titulo = formData.get('titulo') as string ?? ''
+  // Pre-filled tags from multi-upload flow (skip Claude Vision if provided)
+  const preMotivo = formData.get('motivo') as string ?? ''
+  const preZona = formData.get('zona') as string ?? ''
+  const preTamaño = formData.get('tamaño') as string ?? ''
+  const preTags = formData.get('tags') ? JSON.parse(formData.get('tags') as string) as string[] : null
+  const preAltText = formData.get('alt_text') as string ?? ''
+  const preConfidence = formData.get('confidence') ? parseFloat(formData.get('confidence') as string) : null
+  const skipAI = !!(preMotivo && preTags)
 
   if (!file) {
     return NextResponse.json({ error: 'No se envió archivo' }, { status: 400 })
@@ -38,59 +46,49 @@ export async function POST(req: Request) {
   const base64 = Buffer.from(bytes).toString('base64')
   const mediaType = (file.type as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif') || 'image/jpeg'
 
-  let tags: string[] = []
-  let motivo = ''
-  let zona = ''
-  let tamaño = ''
-  let confidence = 0.5
-  let altText = titulo
+  let tags: string[] = preTags ?? []
+  let motivo = preMotivo
+  let zona = preZona
+  let tamaño = preTamaño
+  let confidence = preConfidence ?? 0.5
+  let altText = preAltText || titulo
 
-  try {
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 500,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType, data: base64 },
-          },
-          {
-            type: 'text',
-            text: `Analiza este tatuaje fine line. Responde SOLO con JSON válido:
-{
-  "es_tatuaje": true/false,
-  "motivo": "floral|geometrico|minimalista|animales|letras-frases|abstracto|naturaleza|simbolos|retrato|arquitectura|otro",
-  "zona": "brazo|antebrazo|muneca|mano|pierna|tobillo|pie|espalda|pecho|cuello|oreja|costilla|zona-desconocida",
-  "tamaño": "micro|pequeño|mediano|grande",
-  "tags": ["tag1","tag2","tag3"],
-  "alt_text": "descripción SEO del tatuaje en español",
-  "confidence": 0.0-1.0
-}`,
-          },
-        ],
-      }],
-    })
-
-    const text = response.content[0].type === 'text' ? response.content[0].text : ''
-    const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0])
-      if (!parsed.es_tatuaje) {
-        return NextResponse.json({ error: 'La imagen no parece ser un tatuaje' }, { status: 422 })
+  if (!skipAI) {
+    try {
+      const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            {
+              type: 'text',
+              text: `Analiza este tatuaje fine line. Responde SOLO con JSON válido:
+{"es_tatuaje":true,"motivo":"floral|geometrico|minimalista|animales|letras-frases|abstracto|naturaleza|simbolos|retrato|otro","zona":"brazo|antebrazo|muneca|mano|pierna|tobillo|pie|espalda|pecho|cuello|oreja|costilla|zona-desconocida","tamaño":"micro|pequeño|mediano|grande","tags":["tag1","tag2"],"alt_text":"descripción SEO en español","confidence":0.0}`,
+            },
+          ],
+        }],
+      })
+      const text = response.content[0].type === 'text' ? response.content[0].text : ''
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        if (!parsed.es_tatuaje) {
+          return NextResponse.json({ error: 'La imagen no parece ser un tatuaje' }, { status: 422 })
+        }
+        motivo = parsed.motivo ?? ''
+        zona = parsed.zona ?? ''
+        tamaño = parsed.tamaño ?? ''
+        tags = parsed.tags ?? []
+        altText = parsed.alt_text ?? titulo
+        confidence = parsed.confidence ?? 0.5
       }
-      motivo = parsed.motivo ?? ''
-      zona = parsed.zona ?? ''
-      tamaño = parsed.tamaño ?? ''
-      tags = parsed.tags ?? []
-      altText = parsed.alt_text ?? titulo
-      confidence = parsed.confidence ?? 0.5
+    } catch (e) {
+      console.error('[Claude Vision]', e)
+      confidence = 0.4
     }
-  } catch (e) {
-    console.error('[Claude Vision]', e)
-    confidence = 0.4
   }
 
   // Subir imagen a Supabase Storage
