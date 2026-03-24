@@ -9,7 +9,7 @@ export async function GET() {
 
   const info: Record<string, unknown> = {
     url_set: !!url,
-    url_preview: url ? url.slice(0, 35) : 'EMPTY',
+    url_full: url || 'EMPTY',
     key_set: !!key,
     key_preview: key ? key.slice(0, 20) + '...' : 'EMPTY',
   }
@@ -25,7 +25,7 @@ export async function GET() {
       .select('*', { count: 'exact', head: true })
 
     info.supabase_count = count
-    info.supabase_error = error?.message ?? null
+    info.supabase_error = error?.message ?? ''
   } catch (e) {
     info.exception = String(e)
   }
