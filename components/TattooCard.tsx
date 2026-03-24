@@ -5,24 +5,25 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Heart, Bookmark, User } from 'lucide-react'
 import type { Tattoo } from '@/lib/data'
+import { useAuth } from './AuthContext'
 
 export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
-  const [liked, setLiked] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [likes, setLikes] = useState(tattoo.likes)
+  const { user, likedIds, savedIds, toggleLike, toggleSave, openAuthModal } = useAuth()
   const [hovered, setHovered] = useState(false)
+
+  const isLiked = likedIds.has(tattoo.id)
+  const isSaved = savedIds.has(tattoo.id)
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setLiked(!liked)
-    setLikes(prev => liked ? prev - 1 : prev + 1)
+    user ? toggleLike(tattoo.id) : openAuthModal()
   }
 
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setSaved(!saved)
+    user ? toggleSave(tattoo.id) : openAuthModal()
   }
 
   return (
@@ -32,10 +33,10 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div className="relative w-full" style={{ paddingBottom: `${(tattoo.height / 400) * 100}%` }}>
+        <div className="relative w-full" style={{ paddingBottom: `${((tattoo.height || 350) / 400) * 100}%` }}>
           <Image
             src={tattoo.url}
-            alt={tattoo.alt_text}
+            alt={tattoo.alt_text || tattoo.title}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 50vw, 25vw"
@@ -56,10 +57,10 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
           <button
             onClick={handleSave}
             className={`p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors ${
-              saved ? 'bg-gray-900 text-white' : 'bg-white/90 text-gray-700 hover:bg-white'
+              isSaved ? 'bg-gray-900 text-white' : 'bg-white/90 text-gray-700 hover:bg-white'
             }`}
           >
-            <Bookmark size={15} fill={saved ? 'currentColor' : 'none'} />
+            <Bookmark size={15} fill={isSaved ? 'currentColor' : 'none'} />
           </button>
         </div>
 
@@ -81,16 +82,18 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
             >
               <Heart
                 size={15}
-                fill={liked ? 'white' : 'none'}
+                fill={isLiked ? 'white' : 'none'}
                 className="drop-shadow"
               />
-              <span className="text-xs drop-shadow">{likes}</span>
+              <span className="text-xs drop-shadow">
+                {tattoo.likes + (isLiked && tattoo.likes === 0 ? 1 : 0)}
+              </span>
             </button>
           </div>
         </div>
 
         <div className="absolute top-3 left-3">
-          <span className="text-xs bg-white/90 backdrop-blur-sm text-gray-600 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-white/90 backdrop-blur-sm text-gray-600 px-2 py-0.5 rounded-full font-medium capitalize">
             {tattoo.motivo}
           </span>
         </div>
