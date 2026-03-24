@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.39.0",
-    "@anthropic-ai/sdk": "^0.20.0",
     "lucide-react": "^0.344.0",
     "masonry-layout": "^4.2.2",
     "next": "14.1.0",

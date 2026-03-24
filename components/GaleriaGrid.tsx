@@ -1,30 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
 import TattooCard from './TattooCard'
 import type { Tattoo } from '@/lib/data'
 
-type Props = {
-  tattoos: Tattoo[]
-}
-
-export default function GaleriaGrid({ tattoos }: Props) {
-  const columns = useMemo(() => {
-    const cols: Tattoo[][] = [[], [], [], []]
-    tattoos.forEach((t, i) => {
-      cols[i % 4].push(t)
-    })
-    return cols
-  }, [tattoos])
-
-  const columnsMobile = useMemo(() => {
-    const cols: Tattoo[][] = [[], []]
-    tattoos.forEach((t, i) => {
-      cols[i % 2].push(t)
-    })
-    return cols
-  }, [tattoos])
-
+export default function GaleriaGrid({ tattoos }: { tattoos: Tattoo[] }) {
   if (tattoos.length === 0) {
     return (
       <div className="text-center py-24 text-gray-400">
@@ -35,26 +14,12 @@ export default function GaleriaGrid({ tattoos }: Props) {
   }
 
   return (
-    <>
-      <div className="hidden md:flex gap-3">
-        {columns.map((col, ci) => (
-          <div key={ci} className="flex-1 flex flex-col gap-3">
-            {col.map(tattoo => (
-              <TattooCard key={tattoo.id} tattoo={tattoo} />
-            ))}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex md:hidden gap-3">
-        {columnsMobile.map((col, ci) => (
-          <div key={ci} className="flex-1 flex flex-col gap-3">
-            {col.map(tattoo => (
-              <TattooCard key={tattoo.id} tattoo={tattoo} />
-            ))}
-          </div>
-        ))}
-      </div>
-    </>
+    <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-2">
+      {tattoos.map(tattoo => (
+        <div key={tattoo.id} className="break-inside-avoid mb-2">
+          <TattooCard tattoo={tattoo} />
+        </div>
+      ))}
+    </div>
   )
 }

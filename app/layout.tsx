@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import './globals.css'
 import NavBar from '@/components/NavBar'
+import BottomNav from '@/components/BottomNav'
 import { AuthProvider } from '@/components/AuthContext'
-import { SearchProvider } from '@/components/SearchContext'
 import CtaBanner from '@/components/CtaBanner'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
@@ -20,13 +21,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="es">
       <body className="bg-white font-sans antialiased">
         <AuthProvider initialSession={session}>
-          <SearchProvider>
-            <NavBar />
+            <Suspense fallback={<div className="h-16 bg-white border-b border-gray-100" />}>
+              <NavBar />
+            </Suspense>
             <CtaBanner />
             <main className="min-h-screen bg-white">
               {children}
             </main>
-          </SearchProvider>
+            <BottomNav />
         </AuthProvider>
       </body>
     </html>

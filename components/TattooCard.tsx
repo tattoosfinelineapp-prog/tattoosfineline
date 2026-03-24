@@ -10,6 +10,7 @@ import { useAuth } from './AuthContext'
 export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
   const { user, likedIds, savedIds, toggleLike, openSaveModal, openAuthModal } = useAuth()
   const [hovered, setHovered] = useState(false)
+  const [imgError, setImgError] = useState(false)
 
   const isLiked = likedIds.has(tattoo.id)
   const isSaved = savedIds.has(tattoo.id)
@@ -26,6 +27,8 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
     user ? openSaveModal(tattoo.id) : openAuthModal()
   }
 
+  const aspectRatio = `400/${tattoo.height || 350}`
+
   return (
     <Link href={`/tattoo/${tattoo.id}`}>
       <div
@@ -33,18 +36,31 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div className="relative w-full" style={{ paddingBottom: `${((tattoo.height || 350) / 400) * 100}%` }}>
+        {imgError ? (
+          <div
+            className="w-full bg-gray-100 flex items-center justify-center"
+            style={{ aspectRatio }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+          </div>
+        ) : (
           <Image
             src={tattoo.url}
             alt={tattoo.alt_text || tattoo.title}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-            sizes="(max-width: 768px) 50vw, 25vw"
+            width={400}
+            height={tattoo.height || 350}
+            className="w-full h-auto block transition-transform duration-300 group-hover:scale-[1.02]"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             loading="lazy"
             placeholder="blur"
             blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+            onError={() => setImgError(true)}
           />
-        </div>
+        )}
 
         {/* Overlay gradient */}
         <div
@@ -90,7 +106,8 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
             >
               <Heart
                 size={14}
-                fill={isLiked ? 'white' : 'none'}
+                fill={isLiked ? '#E60023' : 'none'}
+                stroke={isLiked ? '#E60023' : 'white'}
                 className={`drop-shadow transition-transform ${isLiked ? 'scale-110' : ''}`}
               />
               <span className="text-xs drop-shadow">{tattoo.likes}</span>

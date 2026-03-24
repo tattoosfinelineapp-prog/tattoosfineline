@@ -60,9 +60,61 @@ export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
   const { data, error } = await getClient()
     .from('photos')
     .select(SELECT_PHOTO)
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit)
   if (error) { console.error('[getPhotos]', error.message); return [] }
+  return (data as unknown as PhotoRow[]).map(mapPhoto)
+}
+
+export async function getPhotosPage(
+  page: number,
+  limit = 24,
+  query?: string
+): Promise<{ photos: Tattoo[]; total: number }> {
+  if (!hasEnvVars()) return { photos: [], total: 0 }
+  const from = page * limit
+  const to = from + limit - 1
+  const client = getClient()
+  let q = client
+    .from('photos')
+    .select(SELECT_PHOTO, { count: 'exact' })
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .range(from, to)
+
+  if (query) {
+    q = q.or(
+      `title.ilike.%${query}%,motivo.ilike.%${query}%,zona.ilike.%${query}%,alt_text.ilike.%${query}%`
+    )
+  }
+
+  const { data, error, count } = await q
+  if (error) { console.error('[getPhotosPage]', error.message); return { photos: [], total: 0 } }
+  return {
+    photos: (data as unknown as PhotoRow[]).map(mapPhoto),
+    total: count ?? 0,
+  }
+}
+
+export async function getPhotoCount(): Promise<number> {
+  if (!hasEnvVars()) return 0
+  const { count } = await getClient()
+    .from('photos')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'published')
+  return count ?? 0
+}
+
+export async function getLandingPhotos(limit = 12): Promise<Tattoo[]> {
+  if (!hasEnvVars()) return []
+  const { data, error } = await getClient()
+    .from('photos')
+    .select(SELECT_PHOTO)
+    .eq('status', 'published')
+    .order('likes', { ascending: false })
+    .limit(limit)
+  if (error) return []
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
 
