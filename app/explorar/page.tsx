@@ -1,9 +1,5 @@
-import ExplorarClient from '@/components/ExplorarClient'
-import { getPhotos } from '@/lib/queries'
+import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export default async function ExplorarPage() {
-  const tattoos = await getPhotos()
-  return <ExplorarClient tattoos={tattoos} />
+export default function ExplorarPage() {
+  redirect('/')
 }

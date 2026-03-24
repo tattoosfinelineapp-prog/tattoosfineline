@@ -29,7 +29,7 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
   return (
     <Link href={`/tattoo/${tattoo.id}`}>
       <div
-        className="relative rounded-2xl overflow-hidden bg-gray-50 shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group"
+        className="relative rounded-2xl overflow-hidden bg-gray-100 cursor-pointer group"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
@@ -38,64 +38,64 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
             src={tattoo.url}
             alt={tattoo.alt_text || tattoo.title}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             sizes="(max-width: 768px) 50vw, 25vw"
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
           />
         </div>
 
+        {/* Overlay gradient */}
         <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent transition-opacity duration-300 ${
+          className={`absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent transition-opacity duration-200 ${
             hovered ? 'opacity-100' : 'opacity-0'
           }`}
         />
 
+        {/* Save button — top right */}
         <div
-          className={`absolute top-3 right-3 flex flex-col gap-2 transition-opacity duration-300 ${
-            hovered ? 'opacity-100' : 'opacity-0'
+          className={`absolute top-2.5 right-2.5 transition-opacity duration-200 ${
+            hovered || isSaved ? 'opacity-100' : 'opacity-0'
           }`}
         >
           <button
             onClick={handleSave}
-            className={`p-2 rounded-full shadow-sm backdrop-blur-sm transition-colors ${
-              isSaved ? 'bg-gray-900 text-white' : 'bg-white/90 text-gray-700 hover:bg-white'
+            className={`p-2 rounded-full shadow-md backdrop-blur-sm transition-colors ${
+              isSaved
+                ? 'bg-gray-900 text-white'
+                : 'bg-white/90 text-gray-700 hover:bg-white'
             }`}
           >
-            <Bookmark size={15} fill={isSaved ? 'currentColor' : 'none'} />
+            <Bookmark size={14} fill={isSaved ? 'currentColor' : 'none'} />
           </button>
         </div>
 
+        {/* Bottom overlay: artist + like */}
         <div
-          className={`absolute bottom-0 left-0 right-0 p-3 transition-opacity duration-300 ${
+          className={`absolute bottom-0 left-0 right-0 p-3 transition-opacity duration-200 ${
             hovered ? 'opacity-100' : 'opacity-0'
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <User size={12} className="text-white" />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="w-5 h-5 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                <User size={10} className="text-white" />
               </div>
-              <span className="text-xs text-white font-medium drop-shadow">{tattoo.tatuador}</span>
+              <span className="text-xs text-white font-medium drop-shadow truncate">{tattoo.tatuador}</span>
             </div>
             <button
               onClick={handleLike}
-              className="flex items-center gap-1 text-white"
+              className="flex items-center gap-1 text-white shrink-0 ml-2"
             >
               <Heart
-                size={15}
+                size={14}
                 fill={isLiked ? 'white' : 'none'}
-                className="drop-shadow"
+                className={`drop-shadow transition-transform ${isLiked ? 'scale-110' : ''}`}
               />
-              <span className="text-xs drop-shadow">
-                {tattoo.likes + (isLiked && tattoo.likes === 0 ? 1 : 0)}
-              </span>
+              <span className="text-xs drop-shadow">{tattoo.likes}</span>
             </button>
           </div>
-        </div>
-
-        <div className="absolute top-3 left-3">
-          <span className="text-xs bg-white/90 backdrop-blur-sm text-gray-600 px-2 py-0.5 rounded-full font-medium capitalize">
-            {tattoo.motivo}
-          </span>
         </div>
       </div>
     </Link>
