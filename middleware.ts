@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 
 const PROTECTED = ['/upload', '/guardar', '/tablero', '/perfil/editar']
 const ADMIN_EMAIL = 'tattoosfinelineapp@gmail.com'
+const ADMIN_ID    = 'c01f31dd-5898-4a95-9061-ab66c65102df'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
@@ -12,9 +13,10 @@ export async function middleware(req: NextRequest) {
 
   const pathname = req.nextUrl.pathname
 
-  // Admin routes — only for the admin email
+  // Admin routes — verify by both email and ID (works with Google OAuth)
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    if (!session || session.user.email !== ADMIN_EMAIL) {
+    const isAdmin = session?.user?.email === ADMIN_EMAIL || session?.user?.id === ADMIN_ID
+    if (!isAdmin) {
       return NextResponse.redirect(new URL('/', req.url))
     }
     return res

@@ -29,6 +29,7 @@ export async function GET(request: Request) {
   }
 
   const user = data.session.user
+  console.log('[auth/callback] session user:', data.session?.user?.email)
   console.log('[auth/callback] session OK, user:', user.id, 'provider:', user.app_metadata?.provider)
 
   // Upsert public.users via service role (bypasses RLS, handles Google metadata)
