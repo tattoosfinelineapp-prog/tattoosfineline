@@ -17,6 +17,7 @@ import SaveModal from './SaveModal'
 type AuthContextType = {
   user: User | null
   session: Session | null
+  username: string | null
   authReady: boolean
   likedIds: Set<string>
   savedIds: Set<string>
@@ -31,6 +32,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
+  username: null,
   authReady: false,
   likedIds: new Set(),
   savedIds: new Set(),
@@ -59,6 +61,7 @@ export function AuthProvider({
   // authReady: true once we know for certain whether the user is logged in or not.
   // Starts true if the server already gave us a session, so WelcomePopup never fires falsely.
   const [authReady, setAuthReady] = useState(initialSession !== null)
+  const [username, setUsername] = useState<string | null>(null)
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [modalOpen, setModalOpen] = useState(false)
@@ -69,12 +72,14 @@ export function AuthProvider({
 
   const loadUserData = useCallback(
     async (userId: string) => {
-      const [likesRes, savesRes] = await Promise.all([
+      const [likesRes, savesRes, userRes] = await Promise.all([
         supabase.from('likes').select('photo_id').eq('user_id', userId),
         supabase.from('saves').select('photo_id').eq('user_id', userId),
+        supabase.from('users').select('username').eq('id', userId).single(),
       ])
       if (likesRes.data) setLikedIds(new Set(likesRes.data.map((r: { photo_id: string }) => r.photo_id)))
       if (savesRes.data) setSavedIds(new Set(savesRes.data.map((r: { photo_id: string }) => r.photo_id)))
+      if (userRes.data?.username) setUsername(userRes.data.username)
     },
     [supabase]
   )
@@ -91,6 +96,7 @@ export function AuthProvider({
       if (!session) {
         setLikedIds(new Set())
         setSavedIds(new Set())
+        setUsername(null)
       }
       if (session) setModalOpen(false)
     })
@@ -188,7 +194,7 @@ export function AuthProvider({
 
   return (
     <AuthContext.Provider
-      value={{ user, session, authReady, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave, likeToast }}
+      value={{ user, session, username, authReady, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave, likeToast }}
     >
       {children}
       {/* Like incentive toast — show once per session after first like */}

@@ -13,7 +13,7 @@ const SUGERENCIAS_ES = ['floral', 'minimalista', 'geométrico', 'luna', 'maripos
 const SUGERENCIAS_EN = ['floral', 'minimalist', 'geometric', 'moon', 'butterfly', 'rose', 'animals', 'letters', 'arm', 'ankle']
 
 export default function NavBar() {
-  const { user, signOut, openAuthModal } = useAuth()
+  const { user, username, signOut, openAuthModal } = useAuth()
   const t = useTranslations('NavBar')
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -136,7 +136,7 @@ export default function NavBar() {
                       <div className="absolute right-0 top-11 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 w-48 z-50">
                         <p className="px-4 py-2 text-xs text-gray-400 truncate">{user.email}</p>
                         <hr className="my-1 border-gray-100" />
-                        <Link href={`/${user.user_metadata?.username || user.id}`}
+                        <Link href={`/${username || user.id}`}
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           onClick={() => setUserMenuOpen(false)}>
                           <User size={14} />{t('myProfile')}
@@ -217,7 +217,7 @@ export default function NavBar() {
               <Link href="/upload" className="block px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl text-center" onClick={() => setMenuOpen(false)}>
                 {t('uploadPhoto')}
               </Link>
-              <Link href={`/${user.user_metadata?.username || user.id}`} className="block px-3 py-2 text-sm text-gray-700 rounded-xl hover:bg-gray-50" onClick={() => setMenuOpen(false)}>
+              <Link href={`/${username || user.id}`} className="block px-3 py-2 text-sm text-gray-700 rounded-xl hover:bg-gray-50" onClick={() => setMenuOpen(false)}>
                 {t('myProfile')}
               </Link>
               <Link href="/guardar" className="block px-3 py-2 text-sm text-gray-700 rounded-xl hover:bg-gray-50" onClick={() => setMenuOpen(false)}>

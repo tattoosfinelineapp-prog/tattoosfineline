@@ -35,6 +35,8 @@ export default function EditarPerfilPage() {
     auto_reply_enabled: false,
     auto_reply: '',
   })
+  const [usernameInput, setUsernameInput] = useState('')
+  const [usernameError, setUsernameError] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -60,6 +62,7 @@ export default function EditarPerfilPage() {
       if (data) {
         setAvatarUrl(data.avatar ?? null)
         setUsername(data.username ?? '')
+        setUsernameInput(data.username ?? '')
         setTipoCuenta(data.tipo_cuenta ?? '')
         setCiudadInput(data.ciudad ?? '')
         setForm({
@@ -164,8 +167,27 @@ export default function EditarPerfilPage() {
     e.preventDefault()
     setSaving(true)
     setError('')
+    setUsernameError('')
+
+    // Validate username
+    const cleanUsername = usernameInput.trim().toLowerCase().replace(/[^a-z0-9_\-]/g, '')
+    if (cleanUsername && cleanUsername !== username) {
+      const { data: existing } = await supabase
+        .from('users')
+        .select('id')
+        .eq('username', cleanUsername)
+        .neq('id', userId)
+        .single()
+      if (existing) {
+        setUsernameError('Este username ya está en uso')
+        setSaving(false)
+        return
+      }
+    }
+
     const updateData: Record<string, unknown> = {
       nombre: form.nombre.trim(),
+      username: cleanUsername || username || null,
       bio: form.bio.trim(),
       instagram: form.instagram.trim(),
       ciudad: form.ciudad || null,
@@ -188,8 +210,10 @@ export default function EditarPerfilPage() {
       .eq('id', userId)
     setSaving(false)
     if (err) { setError(err.message); return }
+    const finalUsername = cleanUsername || username
+    setUsername(finalUsername)
     setSuccess(true)
-    setTimeout(() => router.push(`/${username || userId}`), 1200)
+    setTimeout(() => router.push(`/${finalUsername || userId}`), 1200)
   }
 
   if (loading) {
@@ -264,6 +288,31 @@ export default function EditarPerfilPage() {
             maxLength={60}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre de usuario</label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">@</span>
+            <input
+              type="text"
+              value={usernameInput}
+              onChange={e => {
+                const v = e.target.value.toLowerCase().replace(/[^a-z0-9_\-]/g, '')
+                setUsernameInput(v)
+                setUsernameError('')
+              }}
+              placeholder="tu-nombre"
+              maxLength={30}
+              className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all"
+            />
+          </div>
+          {usernameInput && (
+            <p className="text-xs text-gray-400 mt-1">Tu perfil: tattoosfineline.com/{usernameInput}</p>
+          )}
+          {usernameError && (
+            <p className="text-xs text-red-500 mt-1">{usernameError}</p>
+          )}
         </div>
 
         <div>

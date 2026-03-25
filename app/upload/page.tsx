@@ -30,7 +30,7 @@ const MAX_FILES = 20
 const MAX_SIZE_MB = 10
 
 export default function UploadPage() {
-  const { user, openAuthModal } = useAuth()
+  const { user, username: authUsername, openAuthModal } = useAuth()
   const router = useRouter()
   const [step, setStep] = useState<Step>('select')
   const [items, setItems] = useState<FileItem[]>([])
@@ -340,7 +340,7 @@ export default function UploadPage() {
         <button onClick={() => { setItems([]); setStep('select') }} className="px-6 py-3 bg-gray-100 text-gray-700 text-sm font-medium rounded-2xl hover:bg-gray-200 transition-colors">
           Subir más
         </button>
-        <button onClick={() => router.push(`/${user.user_metadata?.username || user.id}`)} className="px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-2xl hover:bg-gray-800 transition-colors">
+        <button onClick={() => router.push(`/${authUsername || user.id}`)} className="px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-2xl hover:bg-gray-800 transition-colors">
           Ver mi perfil
         </button>
       </div>

@@ -7,14 +7,14 @@ import { useAuth } from './AuthContext'
 
 export default function BottomNav() {
   const pathname = usePathname()
-  const { user, openAuthModal } = useAuth()
+  const { user, username, openAuthModal } = useAuth()
 
   const items = [
     { href: '/',       icon: Home,     label: 'Inicio' },
     { href: '/feed',   icon: Sparkles, label: 'Feed',  requiresAuth: true },
     { href: '/buscar', icon: Search,   label: 'Buscar' },
     { href: '/upload', icon: Upload,   label: 'Subir', requiresAuth: true },
-    { href: user ? `/${user.user_metadata?.username || user.id}` : null, icon: User, label: 'Perfil', requiresAuth: true },
+    { href: user ? `/${username || user.id}` : null, icon: User, label: 'Perfil', requiresAuth: true },
   ]
 
   return (
