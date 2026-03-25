@@ -13,6 +13,7 @@ type FileItem = {
   titulo: string
   tamano: string
   zona: string
+  motivo: string
   tags: string[]
   alt_text: string
   confidence: number
@@ -29,7 +30,7 @@ type FileItem = {
 
 type Step = 'select' | 'analyze' | 'edit' | 'upload' | 'done'
 
-const MAX_FILES = 20
+const MAX_FILES = 40
 const MAX_SIZE_MB = 10
 
 function TipBanner({ onClose }: { onClose: () => void }) {
@@ -81,7 +82,7 @@ export default function UploadPage() {
       file,
       preview: URL.createObjectURL(file),
       titulo: file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
-      tamano: '', zona: '', tags: [], alt_text: '',
+      tamano: '', zona: '', motivo: '', tags: [], alt_text: '',
       confidence: 0, analyzed: false, analyzing: false, analyzeError: '',
       uploaded: false, uploading: false, uploadError: '',
     }
@@ -176,6 +177,7 @@ export default function UploadPage() {
                   tags: json.tags ?? [],
                   zona: json.zona ?? '',
                   tamano: json.tamano ?? '',
+                  motivo: json.motivo ?? '',
                   alt_text: json.alt_text ?? '',
                   confidence: json.confidence ?? 0.5,
                   analyzeError: json.error ?? '',
@@ -203,6 +205,7 @@ export default function UploadPage() {
       fd.append('titulo', item.titulo)
       fd.append('zona', item.zona)
       fd.append('tamano', item.tamano)   // no ñ in field name
+      fd.append('motivo', item.motivo)
       fd.append('tags', JSON.stringify(item.tags))
       fd.append('alt_text', item.alt_text)
       fd.append('confidence', String(item.confidence))
