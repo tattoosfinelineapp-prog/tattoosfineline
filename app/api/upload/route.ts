@@ -37,7 +37,6 @@ export async function POST(req: Request) {
   }
 
   // Fields from the analyze step
-  const titulo       = formData.get('titulo') as string ?? ''
   const preMotivo    = formData.get('motivo') as string ?? ''
   const preZona      = formData.get('zona') as string ?? ''
   const preTamano    = formData.get('tamano') as string ?? ''  // normalized, no ñ
@@ -59,7 +58,7 @@ export async function POST(req: Request) {
   let zona   = preZona
   let tamano = preTamano
   let confidence = preConfidence ?? 0.5
-  let altText = preAltText || titulo
+  let altText = preAltText
 
   if (!skipAI) {
     // Fallback: analyze in-line if somehow analyze step was skipped
@@ -135,8 +134,8 @@ export async function POST(req: Request) {
 
   const insertData: Record<string, unknown> = {
     url: publicUrl,
-    title: titulo || altText.slice(0, 80) || 'Sin título',
-    alt_text: altText || titulo || 'Tatuaje fine line',
+    title: altText.slice(0, 80) || `Tatuaje ${tags.slice(0, 3).join(' ')}`.trim() || 'Tatuaje fine line',
+    alt_text: altText || `Tatuaje fine line ${tags.join(' ')}`.trim().slice(0, 100) || 'Tatuaje fine line',
     motivo: motivo || null,
     zona: zona || null,
     tags,

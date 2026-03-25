@@ -10,7 +10,6 @@ type FileItem = {
   id: string
   file: File
   preview: string
-  titulo: string
   tamano: string
   zona: string
   motivo: string
@@ -81,7 +80,6 @@ export default function UploadPage() {
       id: `${Date.now()}-${Math.random()}`,
       file,
       preview: URL.createObjectURL(file),
-      titulo: file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
       tamano: '', zona: '', motivo: '', tags: [], alt_text: '',
       confidence: 0, analyzed: false, analyzing: false, analyzeError: '',
       uploaded: false, uploading: false, uploadError: '',
@@ -172,8 +170,6 @@ export default function UploadPage() {
                   ...it,
                   analyzing: false,
                   analyzed: true,
-                  // Update titulo from AI if available, else keep filename-based
-                  titulo: json.titulo || it.titulo,
                   tags: json.tags ?? [],
                   zona: json.zona ?? '',
                   tamano: json.tamano ?? '',
@@ -202,7 +198,6 @@ export default function UploadPage() {
       const compressed = await compressFile(item.file)
       const fd = new FormData()
       fd.append('file', compressed)
-      fd.append('titulo', item.titulo)
       fd.append('zona', item.zona)
       fd.append('tamano', item.tamano)   // no ñ in field name
       fd.append('motivo', item.motivo)
@@ -374,15 +369,6 @@ export default function UploadPage() {
 
                 {/* Tags */}
                 <div className="flex-1 min-w-0">
-                  {/* Titulo editable */}
-                  <input
-                    type="text"
-                    value={item.titulo}
-                    onChange={e => updateItem(item.id, { titulo: e.target.value })}
-                    placeholder="Título"
-                    className="w-full text-sm font-medium text-gray-800 bg-transparent border-0 outline-none mb-2 placeholder-gray-300"
-                  />
-
                   {/* Tag chips */}
                   <div className="flex flex-wrap gap-1.5">
                     {item.tags.map(tag => (
@@ -520,7 +506,7 @@ export default function UploadPage() {
             <div key={item.id} className="flex items-center gap-3 p-3 border border-red-100 rounded-2xl bg-red-50">
               <img src={item.preview} alt="" className="w-14 h-14 object-cover rounded-xl shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-700 truncate">{item.titulo}</p>
+                <p className="text-sm font-medium text-gray-700 truncate">{item.tags.join(', ') || item.file.name}</p>
                 <p className="text-xs text-red-500 truncate">{item.uploadError}</p>
               </div>
               <button
