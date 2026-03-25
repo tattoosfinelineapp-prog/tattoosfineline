@@ -33,6 +33,7 @@ type MapTatuador = {
   tipo_cuenta: string | null
   lat: number
   lng: number
+  precio_desde: number | null
   photos: { id: string; url: string }[]
 }
 
@@ -127,7 +128,10 @@ export default function MapaPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{t.nombre ?? t.username}</p>
-                      <p className="text-xs text-gray-400">{t.ciudad ?? ''}</p>
+                      <p className="text-xs text-gray-400">
+                        {t.ciudad ?? ''}
+                        {t.precio_desde ? ` · desde ${t.precio_desde}€` : ''}
+                      </p>
                     </div>
                   </div>
                   {t.photos.length > 0 && (

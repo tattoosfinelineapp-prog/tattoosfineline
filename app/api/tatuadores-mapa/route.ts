@@ -14,7 +14,7 @@ export async function GET(req: Request) {
 
   let query = admin
     .from('users')
-    .select('id, nombre, username, avatar, ciudad, tipo_cuenta, lat, lng')
+    .select('id, nombre, username, avatar, ciudad, tipo_cuenta, lat, lng, precio_desde')
     .in('tipo_cuenta', ['tatuador', 'estudio'])
     .not('lat', 'is', null)
     .not('lng', 'is', null)
