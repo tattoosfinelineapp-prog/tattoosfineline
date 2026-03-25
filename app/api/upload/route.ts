@@ -9,8 +9,9 @@ function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !key) {
-    console.error('[upload] Missing SUPABASE env vars:', { url: !!url, key: !!key })
-    throw new Error('Supabase env vars not set')
+    console.error('[upload] Missing SUPABASE env vars — url:', !!url, 'service_role_key:', !!key)
+    console.error('[upload] Ensure SUPABASE_SERVICE_ROLE_KEY is set in Vercel Environment Variables')
+    throw new Error('Supabase env vars not set — check SUPABASE_SERVICE_ROLE_KEY in Vercel')
   }
   return createClient(url, key)
 }

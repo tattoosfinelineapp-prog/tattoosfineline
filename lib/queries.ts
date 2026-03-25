@@ -69,16 +69,23 @@ function mapPhoto(row: PhotoRow): Tattoo {
   }
 }
 
-const SELECT_PHOTO = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, saves_count, views_count, users(nombre, ciudad)'
+const SELECT_PHOTO = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, saves_count, views_count, users!left(nombre, ciudad)'
+const SELECT_PHOTO_FALLBACK = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users!left(nombre)'
 
 export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
   if (!hasEnvVars()) return []
-  const { data, error } = await getClient()
+  let { data, error } = await getClient()
     .from('photos')
     .select(SELECT_PHOTO)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit)
+  if (error) {
+    // Fallback if new columns don't exist
+    const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK)
+      .eq('status', 'published').order('created_at', { ascending: false }).limit(limit)
+    data = fb.data as any; error = fb.error
+  }
   if (error) { console.error('[getPhotos]', error.message); return [] }
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
@@ -118,7 +125,28 @@ export async function getPhotosPage(
     )
   }
 
-  const { data, error, count } = await q
+  let { data, error, count } = await q
+
+  // Fallback if new columns don't exist yet in production
+  if (error && error.message.includes('column')) {
+    console.warn('[getPhotosPage] fallback select:', error.message)
+    let q2 = client
+      .from('photos')
+      .select(SELECT_PHOTO_FALLBACK, { count: 'exact' })
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .range(from, to)
+    if (query) {
+      q2 = q2.or(
+        `title.ilike.%${query}%,motivo.ilike.%${query}%,zona.ilike.%${query}%,alt_text.ilike.%${query}%,tags.cs.{${query}}`
+      )
+    }
+    const fallback = await q2
+    data = fallback.data as any
+    error = fallback.error
+    count = fallback.count
+  }
+
   if (error) { console.error('[getPhotosPage]', error.message); return { photos: [], total: 0 } }
 
   let photos = (data as unknown as PhotoRow[]).map(mapPhoto)
@@ -146,12 +174,17 @@ export async function getPhotoCount(): Promise<number> {
 export async function getLandingPhotos(limit = 12): Promise<Tattoo[]> {
   if (!hasEnvVars()) return []
   // Fetch a larger set and shuffle server-side for variety on each load
-  const { data, error } = await getClient()
+  let { data, error } = await getClient()
     .from('photos')
     .select(SELECT_PHOTO)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
     .limit(limit * 4)
+  if (error) {
+    const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK)
+      .eq('status', 'published').order('created_at', { ascending: false }).limit(limit * 4)
+    data = fb.data as any; error = fb.error
+  }
   if (error) return []
   const all = (data as unknown as PhotoRow[]).map(mapPhoto)
   // Fisher-Yates shuffle
@@ -162,37 +195,49 @@ export async function getLandingPhotos(limit = 12): Promise<Tattoo[]> {
   return all.slice(0, limit)
 }
 
+async function selectPhotos(builder: ReturnType<ReturnType<typeof getClient>['from']>) {
+  let { data, error } = await (builder as any).select(SELECT_PHOTO)
+  if (error) {
+    const fb = await (builder as any).select(SELECT_PHOTO_FALLBACK)
+    data = fb.data as any; error = fb.error
+  }
+  if (error) return []
+  return (data as unknown as PhotoRow[]).map(mapPhoto)
+}
+
 export async function getPhotoById(id: string): Promise<Tattoo | null> {
   if (!hasEnvVars()) return null
-  const { data, error } = await getClient()
-    .from('photos')
-    .select(SELECT_PHOTO)
-    .eq('id', id)
-    .single()
+  let { data, error } = await getClient().from('photos').select(SELECT_PHOTO).eq('id', id).single()
+  if (error) {
+    const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK).eq('id', id).single()
+    data = fb.data as any; error = fb.error
+  }
   if (error || !data) return null
   return mapPhoto(data as unknown as PhotoRow)
 }
 
 export async function getSimilarPhotos(motivo: string, currentId: string, limit = 12): Promise<Tattoo[]> {
   if (!hasEnvVars() || !motivo) return []
-  const { data, error } = await getClient()
-    .from('photos')
-    .select(SELECT_PHOTO)
-    .eq('motivo', motivo)
-    .neq('id', currentId)
-    .order('likes', { ascending: false })
-    .limit(limit)
+  let { data, error } = await getClient().from('photos').select(SELECT_PHOTO)
+    .eq('motivo', motivo).neq('id', currentId).order('likes', { ascending: false }).limit(limit)
+  if (error) {
+    const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK)
+      .eq('motivo', motivo).neq('id', currentId).order('likes', { ascending: false }).limit(limit)
+    data = fb.data as any; error = fb.error
+  }
   if (error) return []
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
 
 export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]> {
   if (!hasEnvVars()) return []
-  const { data, error } = await getClient()
-    .from('photos')
-    .select(SELECT_PHOTO)
-    .eq('tatuador_id', tatuador_id)
-    .order('created_at', { ascending: false })
+  let { data, error } = await getClient().from('photos').select(SELECT_PHOTO)
+    .eq('tatuador_id', tatuador_id).order('created_at', { ascending: false })
+  if (error) {
+    const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK)
+      .eq('tatuador_id', tatuador_id).order('created_at', { ascending: false })
+    data = fb.data as any; error = fb.error
+  }
   if (error) { console.error('[getPhotosByTatuador]', error.message); return [] }
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
@@ -310,11 +355,17 @@ export async function getLandingCarpetas(limit = 3): Promise<LandingCarpeta[]> {
 
 export async function getSavedPhotos(userId: string): Promise<Tattoo[]> {
   if (!hasEnvVars()) return []
-  const { data, error } = await getClient()
+  let { data, error } = await getClient()
     .from('saves')
     .select(`photo_id, photos:photo_id(${SELECT_PHOTO})`)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
+  if (error) {
+    const fb = await getClient().from('saves')
+      .select(`photo_id, photos:photo_id(${SELECT_PHOTO_FALLBACK})`)
+      .eq('user_id', userId).order('created_at', { ascending: false })
+    data = fb.data as any; error = fb.error
+  }
   if (error) return []
   return (data as unknown as { photos: PhotoRow }[])
     .map(r => r.photos)

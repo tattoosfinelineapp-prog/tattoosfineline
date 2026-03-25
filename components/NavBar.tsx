@@ -171,10 +171,13 @@ export default function NavBar() {
             <LocaleSwitcher />
           </div>
 
-          {/* Logo */}
+          {/* Logo — compact on small screens */}
           <Link href="/" className="shrink-0">
-            <span className="text-lg font-semibold tracking-tight text-gray-900 whitespace-nowrap">
+            <span className="hidden sm:inline text-lg font-semibold tracking-tight text-gray-900 whitespace-nowrap">
               tattoos<span className="font-light">fineline</span>
+            </span>
+            <span className="sm:hidden text-sm font-bold tracking-tight text-gray-900">
+              tf<span className="font-light">l</span>
             </span>
           </Link>
 

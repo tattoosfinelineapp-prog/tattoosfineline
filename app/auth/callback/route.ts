@@ -6,7 +6,9 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  // Always redirect to the production domain, not .vercel.app
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://tattoosfineline.com'
   const code = searchParams.get('code')
 
   console.log('[auth/callback] code present:', !!code)
