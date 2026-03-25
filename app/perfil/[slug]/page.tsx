@@ -92,6 +92,19 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
     getCarpetas(usuario.id),
   ])
 
+  console.log('[perfil] usuario.id:', usuario?.id)
+  console.log('[perfil] fotos count:', fotos?.length)
+  if (fotos.length === 0) {
+    console.log('[perfil] DEBUG — running raw query for tatuador_id:', usuario.id)
+    const debugClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    const { data: rawPhotos, error: rawErr } = await debugClient
+      .from('photos')
+      .select('id, tatuador_id')
+      .eq('tatuador_id', usuario.id)
+      .limit(3)
+    console.log('[perfil] raw query result:', rawPhotos?.length, 'error:', rawErr?.message ?? 'none')
+  }
+
   const totalLikes = fotos.reduce((sum, f) => sum + (f.likes ?? 0), 0)
   const bannerUrl = fotos[0]?.url ?? null
 
