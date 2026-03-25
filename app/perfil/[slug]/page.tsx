@@ -9,6 +9,7 @@ import { Instagram, Settings, Globe } from 'lucide-react'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { createClient } from '@supabase/supabase-js'
+import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,18 +20,19 @@ type UserProfileWithStats = {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-function TipoBadge({ tipo }: { tipo: string | null }) {
+// TipoBadge uses hardcoded labels — translated at call site via t() passed as prop
+function TipoBadge({ tipo, labelTatuador, labelEstudio }: { tipo: string | null; labelTatuador: string; labelEstudio: string }) {
   if (tipo === 'tatuador') {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-900 text-white text-xs font-medium rounded-full">
-        Tatuador
+        {labelTatuador}
       </span>
     )
   }
   if (tipo === 'estudio') {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-900 text-white text-xs font-medium rounded-full">
-        Estudio
+        {labelEstudio}
       </span>
     )
   }
@@ -38,6 +40,7 @@ function TipoBadge({ tipo }: { tipo: string | null }) {
 }
 
 export default async function PerfilPage({ params }: { params: { slug: string } }) {
+  const t = await getTranslations('Perfil')
   const supabase = createServerComponentClient({ cookies })
   const { data: { session } } = await supabase.auth.getSession()
 
@@ -137,7 +140,7 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
                 <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 leading-tight break-words">
                   {displayName ?? usuario.email.split('@')[0]}
                 </h1>
-                <TipoBadge tipo={usuario.tipo_cuenta} />
+                <TipoBadge tipo={usuario.tipo_cuenta} labelTatuador={t('tatuador')} labelEstudio={t('estudio')} />
               </div>
               {usuario.username && (
                 <p className="text-sm text-gray-400 mt-0.5">@{usuario.username}</p>
@@ -154,7 +157,7 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200"
             >
               <Settings size={14} />
-              Editar
+              {t('edit')}
             </Link>
           ) : (
             <FollowButton
@@ -202,15 +205,15 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
         <div className="flex gap-8 mb-8">
           <div className="text-center">
             <p className="text-xl font-semibold text-gray-900">{fotos.length}</p>
-            <p className="text-xs text-gray-400">publicados</p>
+            <p className="text-xs text-gray-400">{t('published')}</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-semibold text-gray-900">{followersCount.toLocaleString('es')}</p>
-            <p className="text-xs text-gray-400">seguidores</p>
+            <p className="text-xs text-gray-400">{t('followers')}</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-semibold text-gray-900">{totalLikes.toLocaleString('es')}</p>
-            <p className="text-xs text-gray-400">likes</p>
+            <p className="text-xs text-gray-400">{t('likes')}</p>
           </div>
         </div>
 

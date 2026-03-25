@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Search, User, Folder, ImageIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import type { Tattoo } from '@/lib/data'
 import type { UserProfile, CarpetaPublica } from '@/lib/queries'
 
@@ -103,6 +104,7 @@ function FotoGrid({ fotos }: { fotos: Tattoo[] }) {
 }
 
 function BuscarContent() {
+  const t = useTranslations('Buscar')
   const searchParams = useSearchParams()
   const router = useRouter()
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
@@ -152,10 +154,10 @@ function BuscarContent() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode; count: number }[] = [
-    { id: 'fotos',      label: 'Fotos',      icon: <ImageIcon size={14} />,  count: results.fotos.length },
-    { id: 'tatuadores', label: 'Tatuadores', icon: <User size={14} />,       count: results.tatuadores.length },
-    { id: 'estudios',   label: 'Estudios',   icon: <User size={14} />,       count: results.estudios.length },
-    { id: 'carpetas',   label: 'Carpetas',   icon: <Folder size={14} />,     count: results.carpetas.length },
+    { id: 'fotos',      label: t('tabPhotos'),      icon: <ImageIcon size={14} />,  count: results.fotos.length },
+    { id: 'tatuadores', label: t('tabTatuadores'),  icon: <User size={14} />,       count: results.tatuadores.length },
+    { id: 'estudios',   label: t('tabEstudios'),    icon: <User size={14} />,       count: results.estudios.length },
+    { id: 'carpetas',   label: t('tabCarpetas'),    icon: <Folder size={14} />,     count: results.carpetas.length },
   ]
 
   return (
@@ -167,7 +169,7 @@ function BuscarContent() {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Buscar tatuajes, tatuadores, estudios..."
+          placeholder={t('placeholder')}
           autoFocus
           className="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all"
         />
@@ -209,21 +211,21 @@ function BuscarContent() {
       {!loading && query && !results.fotos.length && !results.tatuadores.length && !results.estudios.length && !results.carpetas.length && (
         <div className="text-center py-16">
           <Search size={32} className="mx-auto mb-3 text-gray-200" />
-          <p className="text-sm text-gray-400">Sin resultados para <strong className="text-gray-600">&ldquo;{query}&rdquo;</strong></p>
+          <p className="text-sm text-gray-400">{t('noResults', { query })}</p>
         </div>
       )}
 
       {!loading && !query && (
         <div className="text-center py-16">
           <Search size={32} className="mx-auto mb-3 text-gray-200" />
-          <p className="text-sm text-gray-400">Escribe para buscar</p>
+          <p className="text-sm text-gray-400">{t('typeToSearch')}</p>
         </div>
       )}
 
-      {/* PERSONAS — horizontal scroll, aparece siempre que haya resultados de usuarios */}
+      {/* PERSONAS */}
       {!loading && query && (results.tatuadores.length > 0 || results.estudios.length > 0) && (
         <div className="mb-6">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Personas</p>
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">{t('people')}</p>
           <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2">
             {[...results.tatuadores, ...results.estudios].map(u => {
               const nombre = u.tipo_cuenta === 'estudio'
@@ -266,7 +268,7 @@ function BuscarContent() {
             <div className="grid sm:grid-cols-2 gap-2">
               {results.tatuadores.map(u => <UserCard key={u.id} user={u} />)}
               {query && !results.tatuadores.length && (
-                <p className="text-sm text-gray-400 col-span-2 text-center py-8">Sin tatuadores encontrados</p>
+                <p className="text-sm text-gray-400 col-span-2 text-center py-8">{t('noTatuadores')}</p>
               )}
             </div>
           )}
@@ -275,7 +277,7 @@ function BuscarContent() {
             <div className="grid sm:grid-cols-2 gap-2">
               {results.estudios.map(u => <UserCard key={u.id} user={u} />)}
               {query && !results.estudios.length && (
-                <p className="text-sm text-gray-400 col-span-2 text-center py-8">Sin estudios encontrados</p>
+                <p className="text-sm text-gray-400 col-span-2 text-center py-8">{t('noEstudios')}</p>
               )}
             </div>
           )}
@@ -284,7 +286,7 @@ function BuscarContent() {
             <div className="grid sm:grid-cols-2 gap-2">
               {results.carpetas.map(c => <CarpetaCard key={c.id} carpeta={c} />)}
               {query && !results.carpetas.length && (
-                <p className="text-sm text-gray-400 col-span-2 text-center py-8">Sin carpetas encontradas</p>
+                <p className="text-sm text-gray-400 col-span-2 text-center py-8">{t('noCarpetas')}</p>
               )}
             </div>
           )}

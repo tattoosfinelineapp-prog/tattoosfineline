@@ -6,14 +6,15 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Search, X, Upload, Menu, LogOut, User } from 'lucide-react'
 import { useAuth } from './AuthContext'
 import NotificacionesCampana from './NotificacionesCampana'
+import LocaleSwitcher from './LocaleSwitcher'
+import { useTranslations } from 'next-intl'
 
-const SUGERENCIAS = [
-  'floral', 'minimalista', 'geométrico', 'luna', 'mariposa',
-  'rosa', 'animales', 'letras', 'brazo', 'tobillo',
-]
+const SUGERENCIAS_ES = ['floral', 'minimalista', 'geométrico', 'luna', 'mariposa', 'rosa', 'animales', 'letras', 'brazo', 'tobillo']
+const SUGERENCIAS_EN = ['floral', 'minimalist', 'geometric', 'moon', 'butterfly', 'rose', 'animals', 'letters', 'arm', 'ankle']
 
 export default function NavBar() {
   const { user, signOut, openAuthModal } = useAuth()
+  const t = useTranslations('NavBar')
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -27,6 +28,9 @@ export default function NavBar() {
   const [inputValue, setInputValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Pick suggestions based on current locale
+  const sugerencias = t('searchPlaceholder').startsWith('Search') ? SUGERENCIAS_EN : SUGERENCIAS_ES
 
   useEffect(() => {
     if (isGaleria) {
@@ -66,7 +70,7 @@ export default function NavBar() {
         {/* ── Desktop row ─────────────────────────────────── */}
         <div className="flex items-center gap-3 h-16">
 
-          {/* Search — grows to fill left side (desktop) */}
+          {/* Search */}
           {showSearch ? (
             <div className="relative flex-1 hidden sm:block">
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
@@ -80,7 +84,7 @@ export default function NavBar() {
                 onKeyDown={e => {
                   if (e.key === 'Enter') { if (isLanding) navigate(inputValue); inputRef.current?.blur() }
                 }}
-                placeholder="Busca tatuajes fine line: floral, luna, mariposa..."
+                placeholder={t('searchPlaceholder')}
                 className="w-full pl-10 pr-10 py-2.5 bg-gray-50 rounded-2xl text-sm text-gray-800 placeholder-gray-400 border border-transparent focus:outline-none focus:border-gray-200 focus:bg-white transition-all"
               />
               {inputValue && (
@@ -90,9 +94,9 @@ export default function NavBar() {
               )}
               {showSugerencias && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-lg border border-gray-100 py-3 z-50">
-                  <p className="text-xs text-gray-400 px-4 mb-2">Búsquedas populares</p>
+                  <p className="text-xs text-gray-400 px-4 mb-2">{t('popularSearches')}</p>
                   <div className="flex flex-wrap gap-2 px-4">
-                    {SUGERENCIAS.map(s => (
+                    {sugerencias.map(s => (
                       <button key={s} onMouseDown={() => handleChange(s)}
                         className="px-3 py-1 bg-gray-50 hover:bg-gray-100 text-sm text-gray-700 rounded-full transition-colors">
                         {s}
@@ -103,12 +107,10 @@ export default function NavBar() {
               )}
             </div>
           ) : (
-            /* No search — push logo+actions to right */
             <div className="flex-1 hidden sm:block" />
           )}
 
-          {/* ── Right side: auth buttons + logo + hamburger ── */}
-          {/* Auth buttons — desktop only */}
+          {/* Right side: auth buttons + locale + logo + hamburger */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
             {!showSearch && (
               <Link href="/buscar" className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors" title="Buscar">
@@ -121,7 +123,7 @@ export default function NavBar() {
                 <Link href="/upload"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
                   <Upload size={15} />
-                  Subir
+                  {t('upload')}
                 </Link>
                 <div className="relative">
                   <button onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -137,17 +139,17 @@ export default function NavBar() {
                         <Link href={`/perfil/${user.id}`}
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           onClick={() => setUserMenuOpen(false)}>
-                          <User size={14} />Mi perfil
+                          <User size={14} />{t('myProfile')}
                         </Link>
                         <Link href="/guardar"
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           onClick={() => setUserMenuOpen(false)}>
-                          Guardados
+                          {t('saved')}
                         </Link>
                         <hr className="my-1 border-gray-100" />
                         <button onClick={() => { signOut(); setUserMenuOpen(false) }}
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors w-full text-left">
-                          <LogOut size={14} />Cerrar sesión
+                          <LogOut size={14} />{t('logout')}
                         </button>
                       </div>
                     </>
@@ -158,30 +160,31 @@ export default function NavBar() {
               <>
                 <button onClick={() => openAuthModal('login')}
                   className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-colors font-medium">
-                  Entrar
+                  {t('login')}
                 </button>
                 <button onClick={() => openAuthModal('register')}
                   className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
-                  Registrarse
+                  {t('register')}
                 </button>
               </>
             )}
+            <LocaleSwitcher />
           </div>
 
-          {/* Logo — right of auth, visible on all sizes */}
+          {/* Logo */}
           <Link href="/" className="shrink-0">
             <span className="text-lg font-semibold tracking-tight text-gray-900 whitespace-nowrap">
               tattoos<span className="font-light">fineline</span>
             </span>
           </Link>
 
-          {/* Hamburger — mobile only, rightmost */}
+          {/* Hamburger — mobile */}
           <button className="md:hidden p-2 rounded-lg text-gray-600" onClick={() => setMenuOpen(!menuOpen)}>
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
 
-        {/* ── Mobile: search on left, logo+hamburger already on right via flex ── */}
+        {/* Mobile search */}
         {showSearch && (
           <div className="sm:hidden pb-3">
             <div className="relative">
@@ -190,7 +193,7 @@ export default function NavBar() {
                 type="text"
                 value={inputValue}
                 onChange={e => handleChange(e.target.value)}
-                placeholder="Busca tatuajes..."
+                placeholder={t('searchPlaceholderMobile')}
                 className="w-full pl-9 pr-8 py-2.5 bg-gray-50 rounded-xl text-sm focus:outline-none focus:border-gray-200 focus:bg-white border border-transparent transition-all"
               />
               {inputValue && (
@@ -203,34 +206,37 @@ export default function NavBar() {
         )}
       </div>
 
-      {/* Mobile menu dropdown */}
+      {/* Mobile menu */}
       {menuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 space-y-1">
           {user ? (
             <>
               <Link href="/upload" className="block px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl text-center" onClick={() => setMenuOpen(false)}>
-                Subir foto
+                {t('uploadPhoto')}
               </Link>
               <Link href={`/perfil/${user.id}`} className="block px-3 py-2 text-sm text-gray-700 rounded-xl hover:bg-gray-50" onClick={() => setMenuOpen(false)}>
-                Mi perfil
+                {t('myProfile')}
               </Link>
               <Link href="/guardar" className="block px-3 py-2 text-sm text-gray-700 rounded-xl hover:bg-gray-50" onClick={() => setMenuOpen(false)}>
-                Guardados
+                {t('saved')}
               </Link>
               <button onClick={() => { signOut(); setMenuOpen(false) }} className="block w-full px-3 py-2 text-sm text-gray-600 rounded-xl hover:bg-gray-50 text-left">
-                Cerrar sesión
+                {t('logout')}
               </button>
             </>
           ) : (
             <>
               <button onClick={() => { openAuthModal('login'); setMenuOpen(false) }} className="block w-full px-3 py-2 text-sm text-gray-700 rounded-xl hover:bg-gray-50 text-left">
-                Entrar
+                {t('login')}
               </button>
               <button onClick={() => { openAuthModal('register'); setMenuOpen(false) }} className="block w-full px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl text-center">
-                Registrarse
+                {t('register')}
               </button>
             </>
           )}
+          <div className="pt-1 border-t border-gray-100 flex justify-end">
+            <LocaleSwitcher />
+          </div>
         </div>
       )}
     </nav>

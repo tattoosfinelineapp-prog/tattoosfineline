@@ -3,15 +3,16 @@ import Link from 'next/link'
 import LandingSearch from '@/components/LandingSearch'
 import AnimatedTagline from '@/components/AnimatedTagline'
 import { getLandingPhotos, getPhotoCount, getLandingCarpetas, getTopTatuadores } from '@/lib/queries'
+import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
-const POPULAR_TAGS = [
-  'floral', 'luna', 'mariposa', 'minimalista',
-  'letras', 'geométrico', 'animales', 'mandala',
-]
+const POPULAR_TAGS_ES = ['floral', 'luna', 'mariposa', 'minimalista', 'letras', 'geométrico', 'animales', 'mandala']
+const POPULAR_TAGS_EN = ['floral', 'moon', 'butterfly', 'minimalist', 'letters', 'geometric', 'animals', 'mandala']
 
 export default async function Home() {
+  const t = await getTranslations('Landing')
+
   const [bgPhotos, total, carpetasData, topTatuadores] = await Promise.all([
     getLandingPhotos(16),
     getPhotoCount(),
@@ -22,8 +23,12 @@ export default async function Home() {
   const featuredTatuador = topTatuadores[0] ?? null
 
   const countLabel = total > 0
-    ? `+${total.toLocaleString('es')} tatuajes y creciendo`
-    : 'Miles de tatuajes fine line'
+    ? t('counter', { count: total.toLocaleString('es') })
+    : t('counterFallback')
+
+  // Detect locale to pick correct tag list
+  const isEnglish = t('exploreGallery') === 'Explore gallery'
+  const POPULAR_TAGS = isEnglish ? POPULAR_TAGS_EN : POPULAR_TAGS_ES
 
   return (
     <>
@@ -55,7 +60,7 @@ export default async function Home() {
             <AnimatedTagline />
           </p>
           <p className="text-sm text-gray-400 mb-8">
-            Tattoos inspo para encontrar tu próximo tatuaje perfecto
+            {t('subtitle')}
           </p>
 
           <LandingSearch />
@@ -77,7 +82,7 @@ export default async function Home() {
               href="/galeria"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-gray-900 text-white rounded-2xl text-sm font-medium hover:bg-gray-800 transition-colors shadow-lg"
             >
-              Explorar galería
+              {t('exploreGallery')}
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </Link>
             <p className="text-xs text-gray-400">{countLabel}</p>
@@ -89,18 +94,20 @@ export default async function Home() {
       <section className="py-20 px-6" style={{ backgroundColor: '#FFF5F5' }}>
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 text-center md:text-left">
-            <p className="text-xs font-semibold uppercase tracking-widest text-rose-400 mb-3">Búsqueda inteligente</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-rose-400 mb-3">{t('section2Tag')}</p>
             <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-4 leading-tight">
-              Encuentra tu<br />próximo tatuaje
+              {t('section2Title').split('\n').map((line, i) => (
+                <span key={i}>{line}{i === 0 && <br />}</span>
+              ))}
             </h2>
             <p className="text-gray-500 text-base mb-6 max-w-sm">
-              Busca por estilo, zona del cuerpo o motivo. Miles de tatuajes fine line y microrealismo actualizados cada día.
+              {t('section2Body')}
             </p>
             <Link
               href="/galeria"
               className="inline-flex items-center gap-2 px-5 py-3 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-white transition-colors"
             >
-              Ver galería
+              {t('viewGallery')}
             </Link>
           </div>
           <div className="flex-1 grid grid-cols-3 gap-2 max-w-xs md:max-w-none">
@@ -117,18 +124,20 @@ export default async function Home() {
       <section className="py-20 px-6" style={{ backgroundColor: '#FFFFF0' }}>
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row-reverse items-center gap-12">
           <div className="flex-1 text-center md:text-left">
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-3">Organiza</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-3">{t('section3Tag')}</p>
             <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-4 leading-tight">
-              Crea tus carpetas<br />de inspiración
+              {t('section3Title').split('\n').map((line, i) => (
+                <span key={i}>{line}{i === 0 && <br />}</span>
+              ))}
             </h2>
             <p className="text-gray-500 text-base mb-6 max-w-sm">
-              Guarda los tatuajes que te gusten y organízalos como quieras. &ldquo;Brazo derecho&rdquo;, &ldquo;Algún día&rdquo;, &ldquo;Ideas verano&rdquo;...
+              {t('section3Body')}
             </p>
             <Link
               href="/galeria"
               className="inline-flex items-center gap-2 px-5 py-3 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-white transition-colors"
             >
-              Empezar gratis
+              {t('startFree')}
             </Link>
           </div>
           <div className="flex-1 grid grid-cols-2 gap-3 max-w-xs">
@@ -136,7 +145,9 @@ export default async function Home() {
               ? carpetasData
               : [0, 1, 2, 3].map(i => ({
                   id: String(i),
-                  nombre: ['Ideas verano', 'Brazo derecho', 'Florales', 'Algún día'][i],
+                  nombre: isEnglish
+                    ? ['Summer ideas', 'Right arm', 'Florals', 'Someday'][i]
+                    : ['Ideas verano', 'Brazo derecho', 'Florales', 'Algún día'][i],
                   foto_count: 0,
                   cover_urls: bgPhotos.slice(i * 2, i * 2 + 4).map(p => p.url),
                 }))
@@ -158,7 +169,7 @@ export default async function Home() {
                 </div>
                 <p className="text-xs font-medium text-gray-800 truncate">{carpeta.nombre}</p>
                 {carpeta.foto_count > 0 && (
-                  <p className="text-xs text-gray-400 mt-0.5">{carpeta.foto_count} fotos</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{carpeta.foto_count} {isEnglish ? 'photos' : 'fotos'}</p>
                 )}
               </Link>
             ))}
@@ -170,28 +181,30 @@ export default async function Home() {
       <section className="py-20 px-6" style={{ backgroundColor: '#F0FFF4' }}>
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 text-center md:text-left">
-            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500 mb-3">Para profesionales</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500 mb-3">{t('section4Tag')}</p>
             <h2 className="text-3xl sm:text-4xl font-semibold text-gray-900 mb-4 leading-tight">
-              ¿Eres tatuador<br />o tienes estudio?
+              {t('section4Title').split('\n').map((line, i) => (
+                <span key={i}>{line}{i === 0 && <br />}</span>
+              ))}
             </h2>
             <p className="text-gray-500 text-base mb-2 max-w-sm">
-              Sube todo tu trabajo fine line. Lo que no está aquí, no existe.
+              {t('section4Body1')}
             </p>
             <p className="text-sm text-gray-400 mb-6 max-w-sm">
-              La IA etiqueta tus fotos automáticamente. Sube 20 fotos a la vez y aparece en búsquedas.
+              {t('section4Body2')}
             </p>
             <div className="flex flex-wrap gap-3 justify-center md:justify-start">
               <Link
                 href="/?registro=tatuador"
                 className="inline-flex items-center gap-2 px-5 py-3 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors"
               >
-                Crear perfil gratis
+                {t('createProfile')}
               </Link>
               <Link
                 href="/galeria"
                 className="inline-flex items-center gap-2 px-5 py-3 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-white transition-colors"
               >
-                Ver ejemplos
+                {t('seeExamples')}
               </Link>
             </div>
           </div>
@@ -214,7 +227,7 @@ export default async function Home() {
                   {featuredTatuador?.nombre_estudio ?? featuredTatuador?.nombre ?? 'Sinkply Tattoo'}
                 </p>
                 <p className="text-xs text-gray-400">
-                  Fine line{featuredTatuador?.ciudad ? ` · ${featuredTatuador.ciudad}` : ''}
+                  {t('fineLineOnly')}{featuredTatuador?.ciudad ? ` · ${featuredTatuador.ciudad}` : ''}
                 </p>
               </div>
             </div>
@@ -228,12 +241,12 @@ export default async function Home() {
             <div className="flex gap-4 text-center pt-2 border-t border-gray-50">
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-900">{total > 0 ? total.toLocaleString('es') : '—'}</p>
-                <p className="text-xs text-gray-400">fotos</p>
+                <p className="text-xs text-gray-400">{isEnglish ? 'photos' : 'fotos'}</p>
               </div>
               {featuredTatuador?.followers_count ? (
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-900">{featuredTatuador.followers_count}</p>
-                  <p className="text-xs text-gray-400">seguidores</p>
+                  <p className="text-xs text-gray-400">{isEnglish ? 'followers' : 'seguidores'}</p>
                 </div>
               ) : null}
             </div>
@@ -245,29 +258,31 @@ export default async function Home() {
       <section className="py-24 px-6 bg-gray-900">
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-semibold text-white mb-4 leading-tight">
-            Únete a la<br />comunidad
+            {t('section5Title').split('\n').map((line, i) => (
+              <span key={i}>{line}{i === 0 && <br />}</span>
+            ))}
           </h2>
           <p className="text-gray-400 mb-10 text-base">
-            Tatuadores, estudios y amantes del fine line en un solo lugar.
+            {t('section5Body')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/?registro=true"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-2xl text-sm font-semibold hover:bg-gray-100 transition-colors"
             >
-              Registrarse gratis
+              {t('registerFree')}
             </Link>
             <Link
               href="/galeria"
               className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-gray-700 text-gray-300 rounded-2xl text-sm font-medium hover:border-gray-500 hover:text-white transition-colors"
             >
-              Explorar sin cuenta
+              {t('exploreNoAccount')}
             </Link>
           </div>
           <p className="text-gray-600 text-sm mt-6">
-            ¿Ya tienes cuenta?{' '}
+            {t('alreadyHaveAccount')}{' '}
             <button className="text-gray-400 hover:text-white underline transition-colors">
-              Inicia sesión
+              {t('signIn')}
             </button>
           </p>
         </div>
