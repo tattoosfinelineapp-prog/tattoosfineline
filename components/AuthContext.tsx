@@ -149,13 +149,14 @@ export function AuthProvider({
         isSaved ? next.delete(photoId) : next.add(photoId)
         return next
       })
-      if (isSaved) {
-        await supabase.from('saves').delete().eq('user_id', user.id).eq('photo_id', photoId)
-      } else {
-        await supabase.from('saves').insert({ user_id: user.id, photo_id: photoId })
-      }
+      // Use API route so server can send notification to photo owner
+      await fetch('/api/save-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo_id: photoId, action: isSaved ? 'unsave' : 'save' }),
+      })
     },
-    [user, savedIds, openAuthModal, supabase]
+    [user, savedIds, openAuthModal]
   )
 
   // Called by SaveModal after user picks a board
@@ -165,21 +166,25 @@ export function AuthProvider({
       const isSaved = savedIds.has(saveModalPhotoId)
       if (!isSaved) {
         setSavedIds(prev => new Set(prev).add(saveModalPhotoId))
-        await supabase.from('saves').insert({
-          user_id: user.id,
-          photo_id: saveModalPhotoId,
-          carpeta_id: carpetaId ?? null,
+        await fetch('/api/save-photo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo_id: saveModalPhotoId, carpeta_id: carpetaId }),
         })
       }
     },
-    [user, saveModalPhotoId, savedIds, supabase]
+    [user, saveModalPhotoId, savedIds]
   )
 
   const handleUnsave = useCallback(async () => {
     if (!user || !saveModalPhotoId) return
     setSavedIds(prev => { const n = new Set(prev); n.delete(saveModalPhotoId); return n })
-    await supabase.from('saves').delete().eq('user_id', user.id).eq('photo_id', saveModalPhotoId)
-  }, [user, saveModalPhotoId, supabase])
+    await fetch('/api/save-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo_id: saveModalPhotoId, action: 'unsave' }),
+    })
+  }, [user, saveModalPhotoId])
 
   return (
     <AuthContext.Provider
