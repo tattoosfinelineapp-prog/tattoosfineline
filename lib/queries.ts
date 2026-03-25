@@ -69,8 +69,10 @@ function mapPhoto(row: PhotoRow): Tattoo {
   }
 }
 
-const SELECT_PHOTO = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, saves_count, views_count, users!left(nombre, ciudad)'
-const SELECT_PHOTO_FALLBACK = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users!left(nombre)'
+// Use explicit FK name to disambiguate — photos has two FKs to users (tatuador_id + tatuador_etiquetado_id)
+const SELECT_PHOTO = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, saves_count, views_count, users!photos_tatuador_id_fkey(nombre, ciudad)'
+const SELECT_PHOTO_FALLBACK = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users!photos_tatuador_id_fkey(nombre)'
+const SELECT_PHOTO_MINIMAL = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id'
 
 export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
   if (!hasEnvVars()) return []
@@ -81,10 +83,14 @@ export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
     .order('created_at', { ascending: false })
     .limit(limit)
   if (error) {
-    // Fallback if new columns don't exist
     const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK)
       .eq('status', 'published').order('created_at', { ascending: false }).limit(limit)
     data = fb.data as any; error = fb.error
+  }
+  if (error) {
+    const fb2 = await getClient().from('photos').select(SELECT_PHOTO_MINIMAL)
+      .eq('status', 'published').order('created_at', { ascending: false }).limit(limit)
+    data = fb2.data as any; error = fb2.error
   }
   if (error) { console.error('[getPhotos]', error.message); return [] }
   return (data as unknown as PhotoRow[]).map(mapPhoto)
@@ -146,6 +152,17 @@ export async function getPhotosPage(
     error = fallback.error
     count = fallback.count
   }
+  // Last resort: no join at all
+  if (error) {
+    console.warn('[query] minimal select:', error.message)
+    let q3 = client.from('photos').select(SELECT_PHOTO_MINIMAL, { count: 'exact' })
+      .eq('status', 'published').order('created_at', { ascending: false }).range(from, to)
+    if (query) {
+      q3 = q3.or(`title.ilike.%${query}%,motivo.ilike.%${query}%,zona.ilike.%${query}%,alt_text.ilike.%${query}%,tags.cs.{${query}}`)
+    }
+    const fb2 = await q3
+    data = fb2.data as any; error = fb2.error; count = fb2.count
+  }
 
   if (error) { console.error('[getPhotosPage]', error.message); return { photos: [], total: 0 } }
 
@@ -185,6 +202,11 @@ export async function getLandingPhotos(limit = 12): Promise<Tattoo[]> {
       .eq('status', 'published').order('created_at', { ascending: false }).limit(limit * 4)
     data = fb.data as any; error = fb.error
   }
+  if (error) {
+    const fb2 = await getClient().from('photos').select(SELECT_PHOTO_MINIMAL)
+      .eq('status', 'published').order('created_at', { ascending: false }).limit(limit * 4)
+    data = fb2.data as any; error = fb2.error
+  }
   if (error) return []
   const all = (data as unknown as PhotoRow[]).map(mapPhoto)
   // Fisher-Yates shuffle
@@ -212,6 +234,10 @@ export async function getPhotoById(id: string): Promise<Tattoo | null> {
     const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK).eq('id', id).single()
     data = fb.data as any; error = fb.error
   }
+  if (error) {
+    const fb2 = await getClient().from('photos').select(SELECT_PHOTO_MINIMAL).eq('id', id).single()
+    data = fb2.data as any; error = fb2.error
+  }
   if (error || !data) return null
   return mapPhoto(data as unknown as PhotoRow)
 }
@@ -225,6 +251,11 @@ export async function getSimilarPhotos(motivo: string, currentId: string, limit 
       .eq('motivo', motivo).neq('id', currentId).order('likes', { ascending: false }).limit(limit)
     data = fb.data as any; error = fb.error
   }
+  if (error) {
+    const fb2 = await getClient().from('photos').select(SELECT_PHOTO_MINIMAL)
+      .eq('motivo', motivo).neq('id', currentId).order('likes', { ascending: false }).limit(limit)
+    data = fb2.data as any; error = fb2.error
+  }
   if (error) return []
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
@@ -237,6 +268,11 @@ export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]
     const fb = await getClient().from('photos').select(SELECT_PHOTO_FALLBACK)
       .eq('tatuador_id', tatuador_id).order('created_at', { ascending: false })
     data = fb.data as any; error = fb.error
+  }
+  if (error) {
+    const fb2 = await getClient().from('photos').select(SELECT_PHOTO_MINIMAL)
+      .eq('tatuador_id', tatuador_id).order('created_at', { ascending: false })
+    data = fb2.data as any; error = fb2.error
   }
   if (error) { console.error('[getPhotosByTatuador]', error.message); return [] }
   return (data as unknown as PhotoRow[]).map(mapPhoto)
