@@ -31,7 +31,7 @@ export default function LandingOverlay({ totalFotos }: Props) {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: (process.env.NEXT_PUBLIC_SITE_URL || 'https://tattoosfineline.com') + '/auth/callback' },
     })
   }
 

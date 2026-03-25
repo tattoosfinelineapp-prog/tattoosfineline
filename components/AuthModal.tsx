@@ -54,7 +54,7 @@ export default function AuthModal({ mode, onClose, onSwitchMode }: Props) {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/auth/callback' },
+      options: { redirectTo: (process.env.NEXT_PUBLIC_SITE_URL || 'https://tattoosfineline.com') + '/auth/callback' },
     })
   }
 
