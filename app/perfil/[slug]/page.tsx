@@ -119,11 +119,11 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Avatar + name */}
         <div className="flex items-center gap-4 p-4 -mt-10 sm:-mt-14 mb-2">
-          <div className="w-20 h-20 min-w-[80px] min-h-[80px] rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 border-gray-200">
+          <div className="relative w-24 h-24 shrink-0">
             {usuario.avatar ? (
-              <Image src={usuario.avatar} alt={displayName ?? ''} width={96} height={96} className="object-cover w-full h-full" />
+              <Image src={usuario.avatar} alt={displayName ?? ''} fill className="rounded-full object-cover border-2 border-gray-200" sizes="96px" />
             ) : (
-              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+              <div className="w-full h-full rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
                 <span className="text-3xl font-semibold text-gray-400">{(displayName ?? usuario.email)[0].toUpperCase()}</span>
               </div>
             )}

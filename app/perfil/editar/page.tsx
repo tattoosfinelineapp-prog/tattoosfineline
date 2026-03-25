@@ -20,6 +20,7 @@ export default function EditarPerfilPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState('')
+  const [username, setUsername] = useState('')
   const [tipoCuenta, setTipoCuenta] = useState('')
   const [form, setForm] = useState({
     nombre: '',
@@ -53,11 +54,12 @@ export default function EditarPerfilPage() {
       setUserId(session.user.id)
       const { data } = await supabase
         .from('users')
-        .select('nombre, bio, instagram, tipo_cuenta, ciudad, lat, lng, country, precio_desde, messages_enabled, auto_reply_enabled, auto_reply, avatar')
+        .select('nombre, bio, instagram, tipo_cuenta, ciudad, lat, lng, country, precio_desde, messages_enabled, auto_reply_enabled, auto_reply, avatar, username')
         .eq('id', session.user.id)
         .single()
       if (data) {
         setAvatarUrl(data.avatar ?? null)
+        setUsername(data.username ?? '')
         setTipoCuenta(data.tipo_cuenta ?? '')
         setCiudadInput(data.ciudad ?? '')
         setForm({
@@ -187,7 +189,7 @@ export default function EditarPerfilPage() {
     setSaving(false)
     if (err) { setError(err.message); return }
     setSuccess(true)
-    setTimeout(() => router.push(`/perfil/${userId}`), 1200)
+    setTimeout(() => router.push(`/perfil/${username || userId}`), 1200)
   }
 
   if (loading) {
@@ -206,7 +208,7 @@ export default function EditarPerfilPage() {
     <div className="max-w-lg mx-auto px-4 py-10 pb-24">
       <div className="flex items-center gap-3 mb-8">
         <Link
-          href={`/perfil/${userId}`}
+          href={`/perfil/${username || userId}`}
           className="p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors"
         >
           <ArrowLeft size={20} />

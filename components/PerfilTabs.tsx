@@ -118,10 +118,12 @@ export default function PerfilTabs({ fotos, guardadas, carpetas, isOwnProfile, u
     if (!confirm(`¿Eliminar ${selected.size} foto${selected.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
     setSaving(true)
     const ids = Array.from(selected)
-    await supabase.from('photos').delete().in('id', ids)
+    // Use API route to delete from both Storage and DB
+    await Promise.all(ids.map(id =>
+      fetch(`/api/photos/${id}`, { method: 'DELETE' })
+    ))
     setSaving(false)
     exitSelect()
-    // Reload to reflect deletions
     window.location.reload()
   }
 

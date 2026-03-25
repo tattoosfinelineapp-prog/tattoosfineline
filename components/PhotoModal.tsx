@@ -87,7 +87,7 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
           <div className="p-6 flex flex-col">
             {/* Author */}
             <Link
-              href={`/perfil/${tattoo.tatuador_id}`}
+              href={`/perfil/${tattoo.tatuador_id}`} /* tatuador_id works as slug fallback */
               className="flex items-center gap-3 mb-5 group"
             >
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
