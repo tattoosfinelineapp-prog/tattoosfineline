@@ -118,9 +118,9 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Avatar + name row */}
-        <div className="flex flex-wrap items-start justify-between gap-3 -mt-10 sm:-mt-14 mb-4">
-          <div className="flex items-end gap-4">
-            <div className="min-w-[80px] min-h-[80px] w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-4 border-white shadow-md overflow-hidden shrink-0">
+        <div className="flex items-center justify-between gap-3 -mt-10 sm:-mt-14 mb-4 flex-wrap">
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 min-w-[80px] rounded-full bg-white border-4 border-white shadow-md overflow-hidden shrink-0">
               {usuario.avatar ? (
                 <Image
                   src={usuario.avatar}
@@ -137,9 +137,9 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
                 </div>
               )}
             </div>
-            <div className="mb-1 min-w-0">
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 leading-tight break-words">
+                <h1 className="text-xl font-bold text-gray-900 leading-tight break-words max-w-full">
                   {displayName ?? usuario.email.split('@')[0]}
                 </h1>
                 <TipoBadge tipo={usuario.tipo_cuenta} labelTatuador={t('tatuador')} labelEstudio={t('estudio')} />
@@ -234,6 +234,7 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
           carpetas={carpetas}
           isOwnProfile={isOwnProfile}
           userId={usuario.id}
+          tipoCuenta={usuario.tipo_cuenta}
         />
       </div>
     </div>

@@ -14,7 +14,7 @@ export default function BottomNav() {
     { href: '/feed',   icon: Sparkles, label: 'Feed',  requiresAuth: true },
     { href: '/buscar', icon: Search,   label: 'Buscar' },
     { href: '/upload', icon: Upload,   label: 'Subir', requiresAuth: true },
-    { href: user ? `/perfil/${user.id}` : null, icon: User, label: 'Perfil', requiresAuth: true },
+    { href: user ? `/perfil/${user.user_metadata?.username || user.id}` : null, icon: User, label: 'Perfil', requiresAuth: true },
   ]
 
   return (

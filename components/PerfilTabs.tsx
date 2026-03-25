@@ -16,6 +16,7 @@ type Props = {
   carpetas: Carpeta[]
   isOwnProfile?: boolean
   userId?: string
+  tipoCuenta?: string | null
 }
 
 function SelectableGrid({
@@ -66,7 +67,7 @@ function SelectableGrid({
   )
 }
 
-export default function PerfilTabs({ fotos, guardadas, carpetas, isOwnProfile, userId }: Props) {
+export default function PerfilTabs({ fotos, guardadas, carpetas, isOwnProfile, userId, tipoCuenta }: Props) {
   const supabase = createClientComponentClient()
   const [tab, setTab]           = useState<'creados' | 'guardados' | 'stats'>('creados')
   const [selecting, setSelecting] = useState(false)
@@ -145,7 +146,7 @@ export default function PerfilTabs({ fotos, guardadas, carpetas, isOwnProfile, u
           >
             Guardados ({guardadas.length})
           </button>
-          {isOwnProfile && userId && (
+          {isOwnProfile && userId && (tipoCuenta === 'tatuador' || tipoCuenta === 'estudio') && (
             <button
               onClick={() => { setTab('stats'); exitSelect() }}
               className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
