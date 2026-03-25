@@ -39,7 +39,7 @@ function timeAgo(dateStr: string): string {
   return `hace ${Math.floor(hrs / 24)}d`
 }
 
-export default function NotificationBell() {
+export default function NotificacionesCampana() {
   const { user } = useAuth()
   const supabase = createClientComponentClient()
   const [open, setOpen] = useState(false)

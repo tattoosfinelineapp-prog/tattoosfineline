@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Search, X, Upload, Menu, LogOut, User } from 'lucide-react'
 import { useAuth } from './AuthContext'
-import NotificationBell from './NotificationBell'
+import NotificacionesCampana from './NotificacionesCampana'
 
 const SUGERENCIAS = [
   'floral', 'minimalista', 'geométrico', 'luna', 'mariposa',
@@ -117,7 +117,7 @@ export default function NavBar() {
             )}
             {user ? (
               <>
-                <NotificationBell />
+                <NotificacionesCampana />
                 <Link href="/upload"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
                   <Upload size={15} />
