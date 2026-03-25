@@ -60,10 +60,15 @@ Reglas estrictas:
     })
 
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
+    console.log('[analyze] raw AI response:', text.slice(0, 300))
     const match = text.match(/\{[\s\S]*\}/)
-    if (!match) return NextResponse.json({ error: 'No JSON in response' }, { status: 422 })
+    if (!match) {
+      console.error('[analyze] no JSON found in response')
+      return NextResponse.json({ error: 'No JSON in response' }, { status: 422 })
+    }
 
     const parsed = JSON.parse(match[0])
+    console.log('[analyze] parsed:', JSON.stringify({ tags: parsed.tags, zona: parsed.zona, es_tatuaje: parsed.es_tatuaje }))
 
     if (parsed.contenido_explicito === true) {
       return NextResponse.json({

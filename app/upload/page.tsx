@@ -89,14 +89,21 @@ export default function UploadPage() {
           fd.append('file', compressed)
           const res = await fetch('/api/analyze', { method: 'POST', body: fd })
           const json = await res.json()
-          setItems(prev => prev.map(it =>
-            it.id === item.id ? {
-              ...it, analyzing: false, analyzed: true,
-              tags: json.tags ?? [], zona: json.zona ?? '', motivo: json.motivo ?? '',
-              alt_text: json.alt_text ?? '', es_tatuaje: json.es_tatuaje ?? true,
-              confidence: json.confidence ?? 0.5, analyzeError: json.error ?? '',
-            } : it
-          ))
+          console.log('[upload] analyze result:', item.file.name, JSON.stringify({ ok: res.ok, tags: json.tags, error: json.error }))
+          if (!res.ok) {
+            setItems(prev => prev.map(it =>
+              it.id === item.id ? { ...it, analyzing: false, analyzed: true, analyzeError: json.error || `Error ${res.status}` } : it
+            ))
+          } else {
+            setItems(prev => prev.map(it =>
+              it.id === item.id ? {
+                ...it, analyzing: false, analyzed: true,
+                tags: json.tags ?? [], zona: json.zona ?? '', motivo: json.motivo ?? '',
+                alt_text: json.alt_text ?? '', es_tatuaje: json.es_tatuaje ?? true,
+                confidence: json.confidence ?? 0.5, analyzeError: '',
+              } : it
+            ))
+          }
         } catch {
           setItems(prev => prev.map(it =>
             it.id === item.id ? { ...it, analyzing: false, analyzed: true, analyzeError: 'Error de red' } : it
