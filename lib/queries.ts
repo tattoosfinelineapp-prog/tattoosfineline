@@ -23,8 +23,12 @@ type PhotoRow = {
   likes: number
   height: number | null
   tatuador_id: string | null
-  users: { nombre: string | null } | null
+  saves_count: number | null
+  views_count: number | null
+  users: { nombre: string | null; ciudad: string | null } | null
 }
+
+export type SortOrder = 'recientes' | 'guardados' | 'vistos' | 'relevancia'
 
 export type UserProfile = {
   id: string
@@ -59,10 +63,13 @@ function mapPhoto(row: PhotoRow): Tattoo {
     tatuador_id: row.tatuador_id ?? '',
     likes: row.likes ?? 0,
     height: row.height ?? 350,
+    saves_count: row.saves_count ?? 0,
+    views_count: row.views_count ?? 0,
+    ciudad: row.users?.ciudad ?? '',
   }
 }
 
-const SELECT_PHOTO = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, users(nombre)'
+const SELECT_PHOTO = 'id, url, title, alt_text, motivo, zona, tamaño, tags, likes, height, tatuador_id, saves_count, views_count, users(nombre, ciudad)'
 
 export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
   if (!hasEnvVars()) return []
@@ -79,7 +86,9 @@ export async function getPhotos(limit = 2000): Promise<Tattoo[]> {
 export async function getPhotosPage(
   page: number,
   limit = 24,
-  query?: string
+  query?: string,
+  orden?: SortOrder,
+  ciudad?: string
 ): Promise<{ photos: Tattoo[]; total: number }> {
   if (!hasEnvVars()) return { photos: [], total: 0 }
   const from = page * limit
@@ -89,8 +98,19 @@ export async function getPhotosPage(
     .from('photos')
     .select(SELECT_PHOTO, { count: 'exact' })
     .eq('status', 'published')
-    .order('created_at', { ascending: false })
-    .range(from, to)
+
+  // Sort order
+  const sort = orden ?? 'recientes'
+  if (sort === 'guardados') {
+    q = q.order('saves_count', { ascending: false, nullsFirst: false })
+  } else if (sort === 'vistos') {
+    q = q.order('views_count', { ascending: false, nullsFirst: false })
+  } else {
+    // recientes and relevancia both use created_at
+    q = q.order('created_at', { ascending: false })
+  }
+
+  q = q.range(from, to)
 
   if (query) {
     q = q.or(
@@ -100,10 +120,18 @@ export async function getPhotosPage(
 
   const { data, error, count } = await q
   if (error) { console.error('[getPhotosPage]', error.message); return { photos: [], total: 0 } }
-  return {
-    photos: (data as unknown as PhotoRow[]).map(mapPhoto),
-    total: count ?? 0,
+
+  let photos = (data as unknown as PhotoRow[]).map(mapPhoto)
+
+  // City prioritization: show local results first, then global
+  if (ciudad) {
+    const ciudadLower = ciudad.toLowerCase()
+    const local  = photos.filter(p => p.ciudad.toLowerCase() === ciudadLower)
+    const global = photos.filter(p => p.ciudad.toLowerCase() !== ciudadLower)
+    photos = [...local, ...global]
   }
+
+  return { photos, total: count ?? 0 }
 }
 
 export async function getPhotoCount(): Promise<number> {

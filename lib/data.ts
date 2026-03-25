@@ -11,6 +11,9 @@ export type Tattoo = {
   tatuador_id: string
   likes: number
   height: number
+  saves_count: number
+  views_count: number
+  ciudad: string
 }
 
 export const MOTIVOS = [
@@ -39,6 +42,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'laura-ink',
     likes: 243,
     height: 380,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '2',
@@ -53,6 +59,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'marc-lines',
     likes: 189,
     height: 300,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '3',
@@ -67,6 +76,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'sofia-tattoo',
     likes: 412,
     height: 420,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '4',
@@ -81,6 +93,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'laura-ink',
     likes: 567,
     height: 340,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '5',
@@ -95,6 +110,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'marc-lines',
     likes: 334,
     height: 500,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '6',
@@ -109,6 +127,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'sofia-tattoo',
     likes: 891,
     height: 460,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '7',
@@ -123,6 +144,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'ana-noir',
     likes: 156,
     height: 280,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '8',
@@ -137,6 +161,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'marc-lines',
     likes: 278,
     height: 360,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '9',
@@ -151,6 +178,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'laura-ink',
     likes: 723,
     height: 320,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '10',
@@ -165,6 +195,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'ana-noir',
     likes: 445,
     height: 480,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '11',
@@ -179,6 +212,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'sofia-tattoo',
     likes: 312,
     height: 400,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
   {
     id: '12',
@@ -193,6 +229,9 @@ export const tattoosSample: Tattoo[] = [
     tatuador_id: 'ana-noir',
     likes: 598,
     height: 350,
+    saves_count: 0,
+    views_count: 0,
+    ciudad: '',
   },
 ]
 

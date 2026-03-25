@@ -1,17 +1,21 @@
 import { Suspense } from 'react'
 import { getPhotosPage } from '@/lib/queries'
+import type { SortOrder } from '@/lib/queries'
 import GaleriaInfinita from '@/components/GaleriaInfinita'
 import GaleriaFiltros from '@/components/GaleriaFiltros'
 
 export const dynamic = 'force-dynamic'
 
 type Props = {
-  searchParams: { q?: string }
+  searchParams: { q?: string; orden?: string; ciudad?: string }
 }
 
 export default async function GaleriaPage({ searchParams }: Props) {
-  const query = searchParams.q?.trim() ?? ''
-  const { photos, total } = await getPhotosPage(0, 24, query || undefined)
+  const query  = searchParams.q?.trim() ?? ''
+  const orden  = (searchParams.orden as SortOrder) || 'recientes'
+  const ciudad = searchParams.ciudad ?? ''
+
+  const { photos, total } = await getPhotosPage(0, 24, query || undefined, orden, ciudad || undefined)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-24">

@@ -114,7 +114,6 @@ const SYNONYMS: Record<string, string[]> = {
   reloj:       ['clock', 'watch'],
   key:         ['llave'],
   llave:       ['key'],
-  butterfly:   ['mariposa'],
   fox:         ['zorro'],
   zorro:       ['fox'],
   owl:         ['búho'],

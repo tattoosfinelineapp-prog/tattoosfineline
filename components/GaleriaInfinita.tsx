@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { MapPin } from 'lucide-react'
 import GaleriaGrid from './GaleriaGrid'
 import type { Tattoo } from '@/lib/data'
 
@@ -13,23 +15,29 @@ type Props = {
 }
 
 export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '' }: Props) {
+  const searchParams = useSearchParams()
+  const orden  = searchParams.get('orden') ?? 'recientes'
+  const ciudad = searchParams.get('ciudad') ?? ''
+
   const [photos, setPhotos] = useState<Tattoo[]>(initialPhotos)
   const [total, setTotal] = useState(initialTotal)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(initialPhotos.length >= initialTotal)
 
-  // Refs to read mutable state inside the observer callback without stale closures
   const pageRef = useRef(1)
   const loadingRef = useRef(false)
   const doneRef = useRef(initialPhotos.length >= initialTotal)
   const queryRef = useRef(query)
+  const ordenRef = useRef(orden)
+  const ciudadRef = useRef(ciudad)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // Sync refs
   doneRef.current = done
   queryRef.current = query
+  ordenRef.current = orden
+  ciudadRef.current = ciudad
 
-  // Reset when initial data changes (query changed on server)
+  // Reset when data or filters change
   useEffect(() => {
     setPhotos(initialPhotos)
     setTotal(initialTotal)
@@ -39,13 +47,10 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
     loadingRef.current = false
   }, [initialPhotos, initialTotal])
 
-  // Set up observer once — reads from refs, never re-created due to stale closure
   useEffect(() => {
     const sentinel = sentinelRef.current
     if (!sentinel) return
 
-    // Small delay prevents the observer from firing synchronously on mount
-    // when the initial batch doesn't fill the full viewport
     let timeout: ReturnType<typeof setTimeout>
 
     const observer = new IntersectionObserver(
@@ -60,8 +65,11 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
           const params = new URLSearchParams({
             page: String(pageRef.current),
             limit: String(PAGE_SIZE),
-            ...(queryRef.current ? { q: queryRef.current } : {}),
           })
+          if (queryRef.current) params.set('q', queryRef.current)
+          if (ordenRef.current && ordenRef.current !== 'recientes') params.set('orden', ordenRef.current)
+          if (ciudadRef.current) params.set('ciudad', ciudadRef.current)
+
           const res = await fetch(`/api/photos?${params}`)
           const { photos: newPhotos, total: newTotal } = await res.json()
 
@@ -76,19 +84,18 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
           setTotal(newTotal)
           pageRef.current += 1
         } catch {
-          // silently fail — user can trigger by scrolling again
+          // silently fail
         } finally {
           loadingRef.current = false
           setLoading(false)
         }
       },
-      { rootMargin: '400px' } // Start fetching ~400px before sentinel reaches viewport
+      { rootMargin: '400px' }
     )
 
-    // Delay first observation so photos can render before we check sentinel position
     timeout = setTimeout(() => observer.observe(sentinel), 100)
     return () => { clearTimeout(timeout); observer.disconnect() }
-  }, []) // Only mount/unmount — uses refs for all mutable state
+  }, [])
 
   if (photos.length === 0 && !loading) {
     return (
@@ -108,10 +115,15 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
           <span className="font-medium text-gray-800">{total.toLocaleString('es')}</span>{' '}
           resultado{total !== 1 ? 's' : ''} para{' '}
           <span className="font-medium text-gray-800">&ldquo;{query}&rdquo;</span>
+          {ciudad && (
+            <span className="ml-2 inline-flex items-center gap-1 text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-500">
+              <MapPin size={10} /> {ciudad} primero
+            </span>
+          )}
         </p>
       )}
 
-      <GaleriaGrid tattoos={photos} />
+      <GaleriaGrid tattoos={photos} ciudad={ciudad} />
 
       <div ref={sentinelRef} className="h-px" />
 

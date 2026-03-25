@@ -4,7 +4,7 @@ import { Suspense, useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Search, User, Folder, ImageIcon } from 'lucide-react'
+import { Search, User, Folder, ImageIcon, MapPin, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import type { Tattoo } from '@/lib/data'
 import type { UserProfile, CarpetaPublica } from '@/lib/queries'
@@ -111,16 +111,25 @@ function BuscarContent() {
   const [activeTab, setActiveTab] = useState<Tab>((searchParams.get('tab') as Tab) ?? 'fotos')
   const [results, setResults] = useState<SearchResults>({ fotos: [], tatuadores: [], estudios: [], carpetas: [] })
   const [loading, setLoading] = useState(false)
+  const [orden, setOrden] = useState(searchParams.get('orden') ?? 'recientes')
+  const [ciudad, setCiudad] = useState(searchParams.get('ciudad') ?? '')
+  const [showCiudadInput, setShowCiudadInput] = useState(false)
+  const [geoLoading, setGeoLoading] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const doSearch = async (q: string) => {
+  const doSearch = async (q: string, o?: string, c?: string) => {
     if (!q.trim()) {
       setResults({ fotos: [], tatuadores: [], estudios: [], carpetas: [] })
       return
     }
     setLoading(true)
     try {
-      const res = await fetch(`/api/buscar?q=${encodeURIComponent(q)}`)
+      const params = new URLSearchParams({ q })
+      const ord = o ?? orden
+      const ciu = c ?? ciudad
+      if (ord && ord !== 'recientes') params.set('orden', ord)
+      if (ciu) params.set('ciudad', ciu)
+      const res = await fetch(`/api/buscar?${params}`)
       const data = await res.json()
       setResults(data)
     } catch {
@@ -129,24 +138,52 @@ function BuscarContent() {
     setLoading(false)
   }
 
+  const detectCiudad = () => {
+    if (!navigator.geolocation) { setShowCiudadInput(true); return }
+    setGeoLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&accept-language=es`,
+            { headers: { 'User-Agent': 'tattoosfineline.com' } }
+          )
+          const data = await res.json()
+          const city = data.address?.city || data.address?.town || data.address?.village || ''
+          if (city) { setCiudad(city); doSearch(query, orden, city) }
+          else setShowCiudadInput(true)
+        } catch { setShowCiudadInput(true) }
+        setGeoLoading(false)
+      },
+      () => { setGeoLoading(false); setShowCiudadInput(true) },
+      { enableHighAccuracy: false, timeout: 8000 }
+    )
+  }
+
+  const syncUrl = () => {
+    const params = new URLSearchParams()
+    if (query) params.set('q', query)
+    params.set('tab', activeTab)
+    if (orden && orden !== 'recientes') params.set('orden', orden)
+    if (ciudad) params.set('ciudad', ciudad)
+    router.replace(`/buscar?${params.toString()}`, { scroll: false })
+  }
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       doSearch(query)
-      const params = new URLSearchParams()
-      if (query) params.set('q', query)
-      params.set('tab', activeTab)
-      router.replace(`/buscar?${params.toString()}`, { scroll: false })
+      syncUrl()
     }, 300)
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [query]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => { syncUrl() }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
-    const params = new URLSearchParams()
-    if (query) params.set('q', query)
-    params.set('tab', activeTab)
-    router.replace(`/buscar?${params.toString()}`, { scroll: false })
-  }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (query) doSearch(query)
+    syncUrl()
+  }, [orden, ciudad]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const q = searchParams.get('q') ?? ''
@@ -173,6 +210,59 @@ function BuscarContent() {
           autoFocus
           className="w-full pl-10 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all"
         />
+      </div>
+
+      {/* Sort + City filters */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto scrollbar-none">
+        {[
+          { label: 'Recientes', value: 'recientes' },
+          { label: 'Más guardados', value: 'guardados' },
+          { label: 'Más vistos', value: 'vistos' },
+        ].map(o => (
+          <button
+            key={o.value}
+            onClick={() => setOrden(o.value)}
+            className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              orden === o.value
+                ? 'bg-gray-800 text-white'
+                : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+
+        <div className="w-px h-5 bg-gray-200 shrink-0 mx-1" />
+
+        {ciudad ? (
+          <button
+            onClick={() => { setCiudad(''); setShowCiudadInput(false) }}
+            className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-gray-800 text-white"
+          >
+            <MapPin size={11} />{ciudad}<X size={10} />
+          </button>
+        ) : showCiudadInput ? (
+          <div className="shrink-0 flex items-center gap-1">
+            <input
+              type="text"
+              value={ciudad}
+              onChange={e => setCiudad(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && ciudad.trim()) { doSearch(query); setShowCiudadInput(false) } }}
+              placeholder="¿En qué ciudad?"
+              autoFocus
+              className="w-32 px-3 py-1.5 text-xs border border-gray-200 rounded-full focus:outline-none focus:border-gray-400"
+            />
+            <button onClick={() => setShowCiudadInput(false)} className="p-1 text-gray-400"><X size={12} /></button>
+          </div>
+        ) : (
+          <button
+            onClick={detectCiudad}
+            disabled={geoLoading}
+            className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white text-gray-500 border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50"
+          >
+            <MapPin size={11} />{geoLoading ? 'Detectando...' : 'Cerca de mí'}
+          </button>
+        )}
       </div>
 
       {/* Tabs */}

@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Heart, Bookmark, User } from 'lucide-react'
+import { Heart, Bookmark, User, MapPin } from 'lucide-react'
 import type { Tattoo } from '@/lib/data'
 import { useAuth } from './AuthContext'
 import ReportButton from './ReportButton'
 
-export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
+export default function TattooCard({ tattoo, isLocal }: { tattoo: Tattoo; isLocal?: boolean }) {
   const { user, likedIds, savedIds, toggleLike, openSaveModal, openAuthModal } = useAuth()
   const [hovered, setHovered] = useState(false)
   const [imgError, setImgError] = useState(false)
@@ -69,6 +69,14 @@ export default function TattooCard({ tattoo }: { tattoo: Tattoo }) {
             hovered ? 'opacity-100' : 'opacity-0'
           }`}
         />
+
+        {/* Local badge */}
+        {isLocal && (
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-gray-700 text-[10px] font-medium px-2 py-1 rounded-full shadow-sm">
+            <MapPin size={9} />
+            En tu ciudad
+          </div>
+        )}
 
         {/* Top right: Save + Report */}
         <div

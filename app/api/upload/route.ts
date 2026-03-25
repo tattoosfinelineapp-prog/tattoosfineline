@@ -89,7 +89,7 @@ export async function POST(req: Request) {
         tags = parsed.tags ?? []
         zona = parsed.zona ?? ''
         tamano = parsed.tamano ?? parsed.tamaño ?? ''
-        altText = parsed.alt_text ?? titulo
+        altText = parsed.alt_text ?? ''
         confidence = parsed.confianza ?? 0.5
       }
     } catch (e) {

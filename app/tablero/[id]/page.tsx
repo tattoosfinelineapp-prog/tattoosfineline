@@ -82,6 +82,7 @@ export default function TableroPage({ params }: { params: { id: string } }) {
           tatuador: p!.users?.nombre ?? 'Sinkply Tattoo',
           tatuador_id: p!.tatuador_id ?? '',
           likes: p!.likes ?? 0, height: p!.height ?? 350,
+          saves_count: 0, views_count: 0, ciudad: '',
         }))
 
       setFotos(mapped)
