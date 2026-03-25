@@ -220,6 +220,43 @@ function BuscarContent() {
         </div>
       )}
 
+      {/* PERSONAS — horizontal scroll, aparece siempre que haya resultados de usuarios */}
+      {!loading && query && (results.tatuadores.length > 0 || results.estudios.length > 0) && (
+        <div className="mb-6">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Personas</p>
+          <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2">
+            {[...results.tatuadores, ...results.estudios].map(u => {
+              const nombre = u.tipo_cuenta === 'estudio'
+                ? (u.nombre_estudio ?? u.nombre)
+                : u.nombre
+              return (
+                <Link
+                  key={u.id}
+                  href={`/perfil/${u.username ?? u.id}`}
+                  className="flex flex-col items-center gap-1.5 shrink-0 w-20 group"
+                >
+                  <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden ring-2 ring-transparent group-hover:ring-gray-200 transition-all">
+                    {u.avatar ? (
+                      <Image src={u.avatar} alt={nombre ?? ''} width={56} height={56} className="object-cover w-full h-full" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-xl font-semibold text-gray-400">
+                          {(nombre ?? u.email)[0].toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-700 text-center truncate w-full leading-tight">{nombre ?? u.email.split('@')[0]}</p>
+                  {u.tipo_cuenta !== 'inspiracion' && (
+                    <span className="text-[10px] text-gray-400 capitalize">{u.tipo_cuenta}</span>
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Results */}
       {!loading && (
         <>

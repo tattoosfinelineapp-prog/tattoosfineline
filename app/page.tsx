@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import LandingSearch from '@/components/LandingSearch'
 import AnimatedTagline from '@/components/AnimatedTagline'
-import { getLandingPhotos, getPhotoCount } from '@/lib/queries'
+import { getLandingPhotos, getPhotoCount, getLandingCarpetas, getTopTatuadores } from '@/lib/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,10 +12,14 @@ const POPULAR_TAGS = [
 ]
 
 export default async function Home() {
-  const [bgPhotos, total] = await Promise.all([
+  const [bgPhotos, total, carpetasData, topTatuadores] = await Promise.all([
     getLandingPhotos(16),
     getPhotoCount(),
+    getLandingCarpetas(4),
+    getTopTatuadores(1),
   ])
+
+  const featuredTatuador = topTatuadores[0] ?? null
 
   const countLabel = total > 0
     ? `+${total.toLocaleString('es')} tatuajes y creciendo`
@@ -128,17 +132,35 @@ export default async function Home() {
             </Link>
           </div>
           <div className="flex-1 grid grid-cols-2 gap-3 max-w-xs">
-            {['Ideas verano', 'Brazo derecho', 'Florales', 'Algún día'].map((name, i) => (
-              <div key={name} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            {(carpetasData.length > 0
+              ? carpetasData
+              : [0, 1, 2, 3].map(i => ({
+                  id: String(i),
+                  nombre: ['Ideas verano', 'Brazo derecho', 'Florales', 'Algún día'][i],
+                  foto_count: 0,
+                  cover_urls: bgPhotos.slice(i * 2, i * 2 + 4).map(p => p.url),
+                }))
+            ).map((carpeta, i) => (
+              <Link
+                key={carpeta.id}
+                href={carpeta.foto_count > 0 ? `/tablero/${carpeta.id}` : '/galeria'}
+                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+              >
                 <div className="grid grid-cols-2 gap-1 mb-3 aspect-square rounded-xl overflow-hidden bg-gray-50">
-                  {bgPhotos.slice(i * 2, i * 2 + 4).map(p => (
-                    <div key={p.id} className="relative overflow-hidden">
-                      <Image src={p.url} alt="" fill className="object-cover" sizes="60px" />
+                  {(carpeta.cover_urls.length > 0
+                    ? carpeta.cover_urls
+                    : bgPhotos.slice(i * 2, i * 2 + 4).map(p => p.url)
+                  ).slice(0, 4).map((url, j) => (
+                    <div key={j} className="relative overflow-hidden">
+                      <Image src={url} alt="" fill className="object-cover" sizes="60px" />
                     </div>
                   ))}
                 </div>
-                <p className="text-xs font-medium text-gray-800 truncate">{name}</p>
-              </div>
+                <p className="text-xs font-medium text-gray-800 truncate">{carpeta.nombre}</p>
+                {carpeta.foto_count > 0 && (
+                  <p className="text-xs text-gray-400 mt-0.5">{carpeta.foto_count} fotos</p>
+                )}
+              </Link>
             ))}
           </div>
         </div>
@@ -173,14 +195,27 @@ export default async function Home() {
               </Link>
             </div>
           </div>
-          <div className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 p-5 max-w-xs">
+          <Link
+            href={featuredTatuador ? `/perfil/${featuredTatuador.username ?? featuredTatuador.id}` : '/galeria'}
+            className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 p-5 max-w-xs hover:shadow-md transition-shadow"
+          >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <span className="text-sm font-bold text-gray-500">ST</span>
+              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+                {featuredTatuador?.avatar ? (
+                  <Image src={featuredTatuador.avatar} alt="" width={40} height={40} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm font-bold text-gray-500">
+                    {(featuredTatuador?.nombre ?? 'ST')[0].toUpperCase()}
+                  </span>
+                )}
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-900">Sinkply Tattoo</p>
-                <p className="text-xs text-gray-400">Fine line · Madrid</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  {featuredTatuador?.nombre_estudio ?? featuredTatuador?.nombre ?? 'Sinkply Tattoo'}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Fine line{featuredTatuador?.ciudad ? ` · ${featuredTatuador.ciudad}` : ''}
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-1.5 mb-3">
@@ -195,8 +230,14 @@ export default async function Home() {
                 <p className="text-sm font-semibold text-gray-900">{total > 0 ? total.toLocaleString('es') : '—'}</p>
                 <p className="text-xs text-gray-400">fotos</p>
               </div>
+              {featuredTatuador?.followers_count ? (
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-900">{featuredTatuador.followers_count}</p>
+                  <p className="text-xs text-gray-400">seguidores</p>
+                </div>
+              ) : null}
             </div>
-          </div>
+          </Link>
         </div>
       </section>
 

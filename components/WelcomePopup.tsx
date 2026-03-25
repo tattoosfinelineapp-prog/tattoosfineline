@@ -1,27 +1,28 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from './AuthContext'
 
 export default function WelcomePopup() {
-  const { user, openAuthModal } = useAuth()
-  const [triggered, setTriggered] = useState(false)
+  const { user, authReady, openAuthModal } = useAuth()
 
   useEffect(() => {
-    // Only for guests who haven't seen the popup before
+    // Wait until we know for sure whether the user is logged in.
+    // This prevents the popup firing during the Google OAuth redirect window
+    // when cookies are set but onAuthStateChange hasn't fired yet.
+    if (!authReady) return
     if (user) return
     if (typeof window === 'undefined') return
     if (localStorage.getItem('visited')) return
 
     const timer = setTimeout(() => {
-      setTriggered(true)
-      localStorage.setItem('visited', 'true')
+      // Double-check user is still not logged in before opening modal
       openAuthModal('register')
+      localStorage.setItem('visited', 'true')
     }, 3000)
 
     return () => clearTimeout(timer)
-  }, [user, openAuthModal])
+  }, [authReady, user, openAuthModal])
 
-  // This component renders nothing — it only triggers the modal as a side effect
   return null
 }

@@ -17,6 +17,7 @@ import SaveModal from './SaveModal'
 type AuthContextType = {
   user: User | null
   session: Session | null
+  authReady: boolean
   likedIds: Set<string>
   savedIds: Set<string>
   openAuthModal: (mode?: 'login' | 'register') => void
@@ -30,6 +31,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
+  authReady: false,
   likedIds: new Set(),
   savedIds: new Set(),
   openAuthModal: () => {},
@@ -54,6 +56,9 @@ export function AuthProvider({
   const supabase = createClientComponentClient()
   const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
   const [session, setSession] = useState<Session | null>(initialSession)
+  // authReady: true once we know for certain whether the user is logged in or not.
+  // Starts true if the server already gave us a session, so WelcomePopup never fires falsely.
+  const [authReady, setAuthReady] = useState(initialSession !== null)
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [modalOpen, setModalOpen] = useState(false)
@@ -82,6 +87,7 @@ export function AuthProvider({
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+      setAuthReady(true)  // auth state is now known — safe for WelcomePopup to check
       if (!session) {
         setLikedIds(new Set())
         setSavedIds(new Set())
@@ -177,7 +183,7 @@ export function AuthProvider({
 
   return (
     <AuthContext.Provider
-      value={{ user, session, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave, likeToast }}
+      value={{ user, session, authReady, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave, likeToast }}
     >
       {children}
       {/* Like incentive toast — show once per session after first like */}

@@ -21,18 +21,41 @@ export default function OnboardingPage() {
   const supabase = createClientComponentClient()
   const router   = useRouter()
 
-  const [step, setStep]             = useState(1)
+  // step 0 = elegir tipo (solo si Google user sin tipo elegido)
+  // step 1 = seguir tatuadores
+  // step 2 = CTA subir fotos (tatuadores/estudios)
+  const [step, setStep]             = useState(0)
   const [tatuadores, setTatuadores] = useState<Tatuador[]>([])
   const [filtered, setFiltered]     = useState<Tatuador[]>([])
   const [followed, setFollowed]     = useState<Set<string>>(new Set())
   const [query, setQuery]           = useState('')
   const [tipoCuenta, setTipoCuenta] = useState<string>('inspiracion')
   const [finishing, setFinishing]   = useState(false)
+  const [savingTipo, setSavingTipo] = useState(false)
 
   useEffect(() => {
-    // Read tipo from localStorage (set in AuthModal on register)
-    const tipo = localStorage.getItem('tipo_cuenta') ?? 'inspiracion'
-    setTipoCuenta(tipo)
+    // If tipo was set via email/password registration (stored in localStorage),
+    // skip step 0 and go straight to step 1.
+    const tipo = localStorage.getItem('tipo_cuenta')
+    if (tipo) {
+      setTipoCuenta(tipo)
+      setStep(1)
+    } else {
+      // Google user — check DB for current tipo_cuenta
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) return
+        supabase.from('users').select('tipo_cuenta').eq('id', session.user.id).single()
+          .then(({ data }) => {
+            const dbTipo = data?.tipo_cuenta
+            if (dbTipo && dbTipo !== 'inspiracion') {
+              // Already has a real tipo — skip step 0
+              setTipoCuenta(dbTipo)
+              setStep(1)
+            }
+            // else: stay on step 0 so they can choose
+          })
+      })
+    }
 
     // Fetch top 12 tatuadores/estudios by followers_count
     async function fetchTatuadores() {
@@ -74,6 +97,17 @@ export default function OnboardingPage() {
       t.ciudad?.toLowerCase().includes(q)
     ))
   }, [query, tatuadores])
+
+  const saveTipo = async (tipo: string) => {
+    setSavingTipo(true)
+    setTipoCuenta(tipo)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      await supabase.from('users').update({ tipo_cuenta: tipo }).eq('id', session.user.id)
+    }
+    setSavingTipo(false)
+    setStep(1)
+  }
 
   const toggleFollow = async (userId: string) => {
     const { data: { session } } = await supabase.auth.getSession()
@@ -121,6 +155,35 @@ export default function OnboardingPage() {
   const handleFinish = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     await finish(session?.user?.id)
+  }
+
+  /* ── PASO 0: elegir tipo de cuenta (solo usuarios Google) ── */
+  if (step === 0) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">¿Cómo vas a usar la app?</h1>
+          <p className="text-sm text-gray-500 mb-8">Esto personaliza tu experiencia. Puedes cambiarlo después.</p>
+          <div className="flex flex-col gap-3">
+            {[
+              { tipo: 'tatuador', label: 'Soy tatuador', desc: 'Sube tu trabajo y consigue clientes' },
+              { tipo: 'estudio', label: 'Tengo un estudio', desc: 'Perfil de estudio con varios artistas' },
+              { tipo: 'inspiracion', label: 'Busco inspiración', desc: 'Solo quiero descubrir tatuajes' },
+            ].map(({ tipo, label, desc }) => (
+              <button
+                key={tipo}
+                onClick={() => saveTipo(tipo)}
+                disabled={savingTipo}
+                className="w-full text-left px-5 py-4 border-2 border-gray-100 rounded-2xl hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50"
+              >
+                <p className="font-medium text-gray-900 text-sm">{label}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   /* ── PASO 1 ── */

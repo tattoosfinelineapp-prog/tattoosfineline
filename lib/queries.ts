@@ -94,7 +94,7 @@ export async function getPhotosPage(
 
   if (query) {
     q = q.or(
-      `title.ilike.%${query}%,motivo.ilike.%${query}%,zona.ilike.%${query}%,alt_text.ilike.%${query}%`
+      `title.ilike.%${query}%,motivo.ilike.%${query}%,zona.ilike.%${query}%,alt_text.ilike.%${query}%,tags.cs.{${query}}`
     )
   }
 
@@ -193,14 +193,27 @@ export async function getUserByUsername(username: string): Promise<UserProfile |
   return data as UserProfile
 }
 
+export async function getTopTatuadores(limit = 6): Promise<UserProfile[]> {
+  if (!hasEnvVars()) return []
+  const { data, error } = await getClient()
+    .from('users')
+    .select(SELECT_USER)
+    .in('tipo_cuenta', ['tatuador', 'estudio'])
+    .order('followers_count', { ascending: false })
+    .limit(limit)
+  if (error) return []
+  return data as UserProfile[]
+}
+
 export async function searchUsers(query: string, tipo?: 'tatuador' | 'estudio'): Promise<UserProfile[]> {
   if (!hasEnvVars()) return []
+  // Search across nombre, username AND nombre_estudio so "sinkply" finds the user
   let q = getClient()
     .from('users')
     .select(SELECT_USER)
-    .ilike('nombre', `%${query}%`)
+    .or(`nombre.ilike.%${query}%,username.ilike.%${query}%,nombre_estudio.ilike.%${query}%`)
   if (tipo) q = q.eq('tipo_cuenta', tipo)
-  const { data, error } = await q.limit(20)
+  const { data, error } = await q.order('followers_count', { ascending: false }).limit(20)
   if (error) return []
   return data as UserProfile[]
 }
@@ -223,6 +236,48 @@ export async function searchCarpetas(query: string): Promise<CarpetaPublica[]> {
     .limit(20)
   if (error) return []
   return data as unknown as CarpetaPublica[]
+}
+
+export type LandingCarpeta = {
+  id: string
+  nombre: string
+  foto_count: number
+  cover_urls: string[]
+}
+
+export async function getLandingCarpetas(limit = 3): Promise<LandingCarpeta[]> {
+  if (!hasEnvVars()) return []
+  const client = getClient()
+
+  // Get most recent carpetas that have saves
+  const { data: carpetas } = await client
+    .from('carpetas')
+    .select('id, nombre')
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  if (!carpetas || carpetas.length === 0) return []
+
+  const results = await Promise.all(
+    carpetas.map(async (c: { id: string; nombre: string }) => {
+      const { data: saves, count } = await client
+        .from('saves')
+        .select('photo_id, photos!inner(url)', { count: 'exact' })
+        .eq('carpeta_id', c.id)
+        .limit(4)
+
+      const coverUrls = ((saves ?? []) as unknown as { photos: { url: string } }[])
+        .map(s => s.photos?.url)
+        .filter(Boolean) as string[]
+
+      return { id: c.id, nombre: c.nombre, foto_count: count ?? 0, cover_urls: coverUrls }
+    })
+  )
+
+  // Sort by foto_count desc, return top limit
+  return results
+    .sort((a, b) => b.foto_count - a.foto_count)
+    .slice(0, limit)
 }
 
 export async function getSavedPhotos(userId: string): Promise<Tattoo[]> {
