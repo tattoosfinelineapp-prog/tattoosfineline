@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -163,6 +164,10 @@ export async function POST(req: Request) {
   }
 
   console.log('[upload] done, photo id:', photo.id, 'status:', status)
+
+  // Revalidate pages so new photos appear immediately
+  revalidatePath('/galeria')
+  revalidatePath('/perfil', 'layout')
 
   // Update last_upload_at (fire and forget — SQL trigger also handles this, belt+suspenders)
   admin.from('users').update({ last_upload_at: new Date().toISOString() }).eq('id', session.user.id)

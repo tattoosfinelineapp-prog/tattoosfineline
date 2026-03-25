@@ -133,6 +133,7 @@ export default function UploadPage() {
       done++
       setUploadProgress(Math.round((done / toUpload.length) * 100))
     }
+    router.refresh()
     setStep('done')
   }
 
