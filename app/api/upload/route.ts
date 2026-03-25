@@ -131,7 +131,8 @@ export async function POST(req: Request) {
     : confidence >= 0.60 ? 'pending'
     : 'review'
 
-  console.log('[upload] inserting photo, status:', status, 'confidence:', confidence)
+  console.log('[upload] tatuador_id:', session.user.id)
+  console.log('[upload] inserting photo, status:', status, 'confidence:', confidence, 'tags:', tags)
 
   const insertData: Record<string, unknown> = {
     url: publicUrl,

@@ -119,7 +119,7 @@ export default function UploadPage() {
         fd.append('tamano', '')
         fd.append('tags', JSON.stringify(item.tags))
         fd.append('alt_text', item.alt_text)
-        fd.append('confidence', String(item.confidence || 0.5))
+        fd.append('confidence', '1.0')  // User reviewed → always publish
         const res = await fetch('/api/upload', { method: 'POST', body: fd })
         const json = await res.json()
         if (!res.ok) {
