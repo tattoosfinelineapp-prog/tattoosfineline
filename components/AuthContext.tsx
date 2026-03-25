@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useCallback,
   type ReactNode,
@@ -23,6 +24,7 @@ type AuthContextType = {
   toggleLike: (photoId: string) => Promise<void>
   openSaveModal: (photoId: string) => void
   toggleSave: (photoId: string) => Promise<void>
+  likeToast: boolean
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -35,6 +37,7 @@ const AuthContext = createContext<AuthContextType>({
   toggleLike: async () => {},
   openSaveModal: () => {},
   toggleSave: async () => {},
+  likeToast: false,
 })
 
 export function useAuth() {
@@ -56,6 +59,8 @@ export function AuthProvider({
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'login' | 'register'>('login')
   const [saveModalPhotoId, setSaveModalPhotoId] = useState<string | null>(null)
+  const [likeToast, setLikeToast] = useState(false)
+  const likeToastShownRef = useRef(false)
 
   const loadUserData = useCallback(
     async (userId: string) => {
@@ -108,6 +113,12 @@ export function AuthProvider({
         await supabase.from('likes').delete().eq('user_id', user.id).eq('photo_id', photoId)
       } else {
         await supabase.from('likes').insert({ user_id: user.id, photo_id: photoId })
+        // Show upload incentive toast once per session
+        if (!likeToastShownRef.current) {
+          likeToastShownRef.current = true
+          setLikeToast(true)
+          setTimeout(() => setLikeToast(false), 4000)
+        }
       }
     },
     [user, likedIds, openAuthModal, supabase]
@@ -166,9 +177,16 @@ export function AuthProvider({
 
   return (
     <AuthContext.Provider
-      value={{ user, session, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave }}
+      value={{ user, session, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave, likeToast }}
     >
       {children}
+      {/* Like incentive toast — show once per session after first like */}
+      {likeToast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3 whitespace-nowrap animate-fade-in">
+          <span>¿Tienes uno parecido? Compártelo</span>
+          <a href="/upload" className="text-white underline font-medium">Subir foto</a>
+        </div>
+      )}
       {modalOpen && (
         <AuthModal
           mode={modalMode}

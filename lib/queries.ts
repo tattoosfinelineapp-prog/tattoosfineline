@@ -40,6 +40,9 @@ export type UserProfile = {
   nombre_estudio: string | null
   direccion: string | null
   web: string | null
+  followers_count?: number
+  following_count?: number
+  last_upload_at?: string | null
 }
 
 function mapPhoto(row: PhotoRow): Tattoo {
@@ -166,7 +169,7 @@ export async function getPhotosByTatuador(tatuador_id: string): Promise<Tattoo[]
   return (data as unknown as PhotoRow[]).map(mapPhoto)
 }
 
-const SELECT_USER = 'id, nombre, email, avatar, bio, instagram, tipo, tipo_cuenta, username, ciudad, nombre_estudio, direccion, web'
+const SELECT_USER = 'id, nombre, email, avatar, bio, instagram, tipo, tipo_cuenta, username, ciudad, nombre_estudio, direccion, web, followers_count, following_count, last_upload_at'
 
 export async function getUserById(userId: string): Promise<UserProfile | null> {
   if (!hasEnvVars()) return null

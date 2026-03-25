@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Upload, Bookmark, User } from 'lucide-react'
+import { Home, Sparkles, Search, Upload, User } from 'lucide-react'
 import { useAuth } from './AuthContext'
 
 export default function BottomNav() {
@@ -10,10 +10,10 @@ export default function BottomNav() {
   const { user, openAuthModal } = useAuth()
 
   const items = [
-    { href: '/',        icon: Home,     label: 'Inicio' },
-    { href: '/buscar',  icon: Search,   label: 'Buscar' },
-    { href: '/upload',  icon: Upload,   label: 'Subir',    requiresAuth: true },
-    { href: '/guardar', icon: Bookmark, label: 'Guardados', requiresAuth: true },
+    { href: '/',       icon: Home,     label: 'Inicio' },
+    { href: '/feed',   icon: Sparkles, label: 'Feed',  requiresAuth: true },
+    { href: '/buscar', icon: Search,   label: 'Buscar' },
+    { href: '/upload', icon: Upload,   label: 'Subir', requiresAuth: true },
     { href: user ? `/perfil/${user.id}` : null, icon: User, label: 'Perfil', requiresAuth: true },
   ]
 

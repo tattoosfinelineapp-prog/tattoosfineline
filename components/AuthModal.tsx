@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useRouter } from 'next/navigation'
 import { X, Mail, Lock, User, MapPin, Instagram } from 'lucide-react'
 
 type TipoCuenta = 'tatuador' | 'estudio' | 'inspiracion'
@@ -32,6 +33,7 @@ function GoogleIcon() {
 
 export default function AuthModal({ mode, onClose, onSwitchMode }: Props) {
   const supabase = createClientComponentClient()
+  const router   = useRouter()
   const [regStep, setRegStep] = useState<RegStep>('type')
   const [tipoCuenta, setTipoCuenta] = useState<TipoCuenta>('inspiracion')
 
@@ -113,8 +115,11 @@ export default function AuthModal({ mode, onClose, onSwitchMode }: Props) {
       .then(r => r.json().then(d => console.log('[welcome-email] result:', r.status, d)))
       .catch(e => console.error('[welcome-email] fetch error:', e))
 
-    setSuccess('Revisa tu email para confirmar tu cuenta')
+    // Store tipo for onboarding step 2
+    localStorage.setItem('tipo_cuenta', tipoCuenta)
     setLoading(false)
+    onClose()
+    router.push('/onboarding')
   }
 
   const isWide = mode === 'register' && regStep === 'type'

@@ -23,6 +23,8 @@ type FileItem = {
   uploading: boolean
   uploadError: string
   resultId?: string
+  tatuador_etiquetado_id?: string
+  tatuador_etiquetado_nombre?: string
 }
 
 type Step = 'select' | 'analyze' | 'edit' | 'upload' | 'done'
@@ -56,6 +58,8 @@ export default function UploadPage() {
   const [dragOver, setDragOver] = useState(false)
   const [consent, setConsent] = useState(false)
   const [tagInput, setTagInput] = useState<Record<string, string>>({})
+  const [tatSearch, setTatSearch] = useState<Record<string, string>>({})
+  const [tatResults, setTatResults] = useState<Record<string, { id: string; nombre: string | null; username: string | null }[]>>({})
   const [showTip, setShowTip] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -122,6 +126,21 @@ export default function UploadPage() {
   const removeTag = (id: string, tag: string) =>
     setItems(prev => prev.map(it => it.id === id ? { ...it, tags: it.tags.filter(t => t !== tag) } : it))
 
+  const searchTatuadores = async (itemId: string, q: string) => {
+    setTatSearch(prev => ({ ...prev, [itemId]: q }))
+    if (!q.trim()) { setTatResults(prev => ({ ...prev, [itemId]: [] })); return }
+    const res = await fetch(`/api/buscar?q=${encodeURIComponent(q)}&tipo=tatuador`)
+    const json = await res.json()
+    const all = [...(json.tatuadores ?? []), ...(json.estudios ?? [])]
+    setTatResults(prev => ({ ...prev, [itemId]: all.slice(0, 5) }))
+  }
+
+  const selectTatuador = (itemId: string, tat: { id: string; nombre: string | null; username: string | null }) => {
+    updateItem(itemId, { tatuador_etiquetado_id: tat.id, tatuador_etiquetado_nombre: tat.nombre ?? tat.username ?? 'Tatuador' })
+    setTatSearch(prev => ({ ...prev, [itemId]: '' }))
+    setTatResults(prev => ({ ...prev, [itemId]: [] }))
+  }
+
   const addTag = (id: string, tag: string) => {
     const t = tag.trim().toLowerCase()
     if (!t) return
@@ -187,7 +206,7 @@ export default function UploadPage() {
       fd.append('tags', JSON.stringify(item.tags))
       fd.append('alt_text', item.alt_text)
       fd.append('confidence', String(item.confidence))
-      // No motivo field — simplified
+      if (item.tatuador_etiquetado_id) fd.append('tatuador_etiquetado_id', item.tatuador_etiquetado_id)
 
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
       const json = await res.json()
@@ -397,6 +416,44 @@ export default function UploadPage() {
                   {item.analyzeError && (
                     <p className="text-xs text-amber-500 mt-2">Análisis incompleto — añade tags manualmente</p>
                   )}
+
+                  {/* Tag tatuador */}
+                  <div className="mt-3 relative">
+                    {item.tatuador_etiquetado_id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Tatuado por:</span>
+                        <span className="text-xs bg-gray-900 text-white px-2.5 py-1 rounded-full flex items-center gap-1.5">
+                          {item.tatuador_etiquetado_nombre}
+                          <button onClick={() => updateItem(item.id, { tatuador_etiquetado_id: undefined, tatuador_etiquetado_nombre: undefined })}>
+                            <X size={9} />
+                          </button>
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          value={tatSearch[item.id] ?? ''}
+                          onChange={e => searchTatuadores(item.id, e.target.value)}
+                          placeholder="¿Quién te hizo este tatuaje? (opcional)"
+                          className="w-full text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 focus:outline-none focus:border-gray-300"
+                        />
+                        {(tatResults[item.id] ?? []).length > 0 && (
+                          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                            {(tatResults[item.id] ?? []).map(t => (
+                              <button
+                                key={t.id}
+                                onMouseDown={() => selectTatuador(item.id, t)}
+                                className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                              >
+                                {t.nombre ?? t.username}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -42,7 +42,8 @@ export async function POST(req: Request) {
   const preTamano    = formData.get('tamano') as string ?? ''  // normalized, no ñ
   const preTags      = formData.get('tags') ? JSON.parse(formData.get('tags') as string) as string[] : null
   const preAltText   = formData.get('alt_text') as string ?? ''
-  const preConfStr   = formData.get('confidence') as string | null
+  const preConfStr            = formData.get('confidence') as string | null
+  const tatuadorEtiquetadoId  = formData.get('tatuador_etiquetado_id') as string | null
 
   // If analyze step was run, preConfStr will be set — always skip re-analysis
   const skipAI = preConfStr !== null
@@ -146,6 +147,7 @@ export async function POST(req: Request) {
 
   // Only include tamaño if it has a value (avoids ñ column issues with empty strings)
   if (tamano) insertData['tamaño'] = tamano
+  if (tatuadorEtiquetadoId) insertData['tatuador_etiquetado_id'] = tatuadorEtiquetadoId
 
   const { data: photo, error: dbError } = await admin
     .from('photos')
@@ -159,6 +161,9 @@ export async function POST(req: Request) {
   }
 
   console.log('[upload] done, photo id:', photo.id, 'status:', status)
+
+  // Update last_upload_at (fire and forget — SQL trigger also handles this, belt+suspenders)
+  admin.from('users').update({ last_upload_at: new Date().toISOString() }).eq('id', session.user.id)
 
   return NextResponse.json({
     id: photo.id,

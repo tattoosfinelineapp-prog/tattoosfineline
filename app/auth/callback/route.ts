@@ -34,9 +34,19 @@ export async function GET(request: Request) {
   console.log('[auth/callback] session OK, user:', user.id, user.email, 'provider:', user.app_metadata?.provider)
 
   // Upsert into public.users — handle Google OAuth metadata correctly
+  let isNewUser = false
   try {
     const admin = getAdminClient()
     const meta = user.user_metadata ?? {}
+
+    // Check if user already exists (to detect new vs returning)
+    const { data: existing } = await admin
+      .from('users')
+      .select('onboarding_done')
+      .eq('id', user.id)
+      .single()
+
+    isNewUser = !existing
 
     const { error: upsertError } = await admin
       .from('users')
@@ -45,18 +55,19 @@ export async function GET(request: Request) {
         email: user.email ?? '',
         nombre: meta.full_name ?? meta.name ?? user.email?.split('@')[0] ?? '',
         avatar: meta.avatar_url ?? meta.picture ?? null,
-        tipo: 'cliente',           // original schema column (NOT NULL)
+        tipo: 'cliente',            // original schema column (NOT NULL)
         tipo_cuenta: 'inspiracion', // v2 schema column — default for Google sign-ups
       }, { onConflict: 'id', ignoreDuplicates: false })
 
     if (upsertError) {
       console.error('[auth/callback] upsert error:', upsertError.message)
     } else {
-      console.log('[auth/callback] upsert OK for user:', user.id)
+      console.log('[auth/callback] upsert OK, new user:', isNewUser)
     }
   } catch (e) {
     console.error('[auth/callback] upsert exception:', e)
   }
 
-  return NextResponse.redirect(new URL('/galeria', request.url))
+  const dest = isNewUser ? '/onboarding' : '/galeria'
+  return NextResponse.redirect(new URL(dest, request.url))
 }

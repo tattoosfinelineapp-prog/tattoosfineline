@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { CheckSquare, Square, Tag, Trash2, X, Check, FolderOpen } from 'lucide-react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import GaleriaGrid from './GaleriaGrid'
+import StatsTab from './StatsTab'
 import type { Tattoo } from '@/lib/data'
 import type { Carpeta } from '@/lib/queries'
 
@@ -13,6 +14,8 @@ type Props = {
   fotos: Tattoo[]
   guardadas: Tattoo[]
   carpetas: Carpeta[]
+  isOwnProfile?: boolean
+  userId?: string
 }
 
 function SelectableGrid({
@@ -63,9 +66,9 @@ function SelectableGrid({
   )
 }
 
-export default function PerfilTabs({ fotos, guardadas, carpetas }: Props) {
+export default function PerfilTabs({ fotos, guardadas, carpetas, isOwnProfile, userId }: Props) {
   const supabase = createClientComponentClient()
-  const [tab, setTab]           = useState<'creados' | 'guardados'>('creados')
+  const [tab, setTab]           = useState<'creados' | 'guardados' | 'stats'>('creados')
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected]   = useState<Set<string>>(new Set())
   const [tagInput, setTagInput]   = useState('')
@@ -142,6 +145,16 @@ export default function PerfilTabs({ fotos, guardadas, carpetas }: Props) {
           >
             Guardados ({guardadas.length})
           </button>
+          {isOwnProfile && userId && (
+            <button
+              onClick={() => { setTab('stats'); exitSelect() }}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                tab === 'stats' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-700'
+              }`}
+            >
+              Stats
+            </button>
+          )}
         </div>
 
         {/* Seleccionar button — only in Creados tab */}
@@ -234,6 +247,11 @@ export default function PerfilTabs({ fotos, guardadas, carpetas }: Props) {
             </div>
           )}
         </div>
+      )}
+
+      {/* Tab: Stats */}
+      {tab === 'stats' && isOwnProfile && userId && (
+        <StatsTab userId={userId} />
       )}
 
       {/* ── Bottom selection bar ── */}

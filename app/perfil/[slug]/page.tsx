@@ -3,11 +3,19 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getUserByUsername, getUserById, getPhotosByTatuador, getSavedPhotos, getCarpetas } from '@/lib/queries'
 import PerfilTabs from '@/components/PerfilTabs'
+import FollowButton from '@/components/FollowButton'
+import StatsTab from '@/components/StatsTab'
 import { Instagram, Settings, Globe } from 'lucide-react'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+
+type UserProfileWithStats = {
+  followers_count?: number
+  following_count?: number
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -41,6 +49,37 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
   if (!usuario) notFound()
 
   const isOwnProfile = session?.user?.id === usuario.id
+
+  // Check if current user follows this profile
+  let isFollowing = false
+  let followersCount = (usuario as UserProfileWithStats).followers_count ?? 0
+  if (session?.user?.id && !isOwnProfile) {
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data: followRow } = await admin
+      .from('user_follows')
+      .select('id')
+      .eq('follower_id', session.user.id)
+      .eq('following_id', usuario.id)
+      .single()
+    isFollowing = !!followRow
+  }
+
+  // Fetch updated followers count from DB
+  {
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data: statsRow } = await admin
+      .from('users')
+      .select('followers_count')
+      .eq('id', usuario.id)
+      .single()
+    followersCount = statsRow?.followers_count ?? 0
+  }
 
   const [fotos, guardadas, carpetas] = await Promise.all([
     getPhotosByTatuador(usuario.id),
@@ -109,7 +148,7 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
             </div>
           </div>
 
-          {isOwnProfile && (
+          {isOwnProfile ? (
             <Link
               href="/perfil/editar"
               className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200"
@@ -117,6 +156,11 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
               <Settings size={14} />
               Editar
             </Link>
+          ) : (
+            <FollowButton
+              targetUserId={usuario.id}
+              initialFollowing={isFollowing}
+            />
           )}
         </div>
 
@@ -161,8 +205,8 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
             <p className="text-xs text-gray-400">publicados</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-semibold text-gray-900">{guardadas.length}</p>
-            <p className="text-xs text-gray-400">guardados</p>
+            <p className="text-xl font-semibold text-gray-900">{followersCount.toLocaleString('es')}</p>
+            <p className="text-xs text-gray-400">seguidores</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-semibold text-gray-900">{totalLikes.toLocaleString('es')}</p>
@@ -175,6 +219,8 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
           fotos={fotos}
           guardadas={guardadas}
           carpetas={carpetas}
+          isOwnProfile={isOwnProfile}
+          userId={usuario.id}
         />
       </div>
     </div>
