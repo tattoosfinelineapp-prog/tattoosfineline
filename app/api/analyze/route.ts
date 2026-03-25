@@ -22,33 +22,34 @@ export async function POST(req: Request) {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 500,
+      max_tokens: 400,
       messages: [{
         role: 'user',
         content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
           {
             type: 'text',
-            text: `Analiza esta imagen para una galería de tatuajes. Responde SOLO con JSON válido, sin texto extra:
+            text: `Analiza este tatuaje de línea fina. Describe SOLO lo que ves en la imagen.
+Responde únicamente con JSON válido, sin texto extra:
 {
   "es_tatuaje": true,
-  "es_fineline_o_microrealismo": true,
+  "titulo": "tatuaje fine line de rosa en muñeca",
+  "tags": ["floral", "rosa", "fine line"],
+  "zona": "muñeca",
+  "tamano": "pequeño",
+  "alt_text": "Tatuaje fine line de rosa con espinas en la muñeca, estilo minimalista",
   "contenido_explicito": false,
-  "contiene_cara": false,
-  "nudity_parcial": false,
-  "motivo": "floral|geometrico|minimalista|animales|letras-frases|abstracto|naturaleza|simbolos|retrato|otro",
-  "zona": "brazo|antebrazo|muneca|mano|pierna|tobillo|pie|espalda|pecho|cuello|oreja|costilla|zona-desconocida",
-  "tamaño": "micro|pequeño|mediano|grande",
-  "tags": ["tag1","tag2","tag3","tag4"],
-  "alt_text": "descripción SEO detallada en español",
-  "confianza": 0.0
+  "confianza": 0.9
 }
 
-Reglas importantes:
+Reglas estrictas:
+- titulo: máximo 6 palabras, describe lo que ves (NO uses el nombre del archivo)
+- tags: máximo 5, solo lo que ves visualmente (floral, luna, mariposa, geométrico, letras, animal concreto...)
+- zona: brazo | antebrazo | muñeca | mano | pierna | tobillo | pie | espalda | pecho | cuello | oreja | costilla | zona-desconocida
+- tamano: micro | pequeño | mediano | grande
+- es_tatuaje: false si la imagen NO muestra un tatuaje real en piel humana
 - contenido_explicito: true solo si hay genitales o contenido sexual explícito
-- contiene_cara: true si hay un rostro humano identificable (no dibujos/retratos de tatuaje)
-- nudity_parcial: true para tatuajes en pecho/costillas/cadera sin ropa (normal en tatuajes)
-- es_fineline_o_microrealismo: true si es estilo fine line, linework o microrealismo`,
+- Si la confianza es baja, devuelve tags vacíos en lugar de tags incorrectos`,
           },
         ],
       }],
@@ -60,7 +61,6 @@ Reglas importantes:
 
     const parsed = JSON.parse(match[0])
 
-    // Rechazar contenido explícito
     if (parsed.contenido_explicito === true) {
       return NextResponse.json({
         error: 'contenido_explicito',
@@ -69,23 +69,21 @@ Reglas importantes:
     }
 
     return NextResponse.json({
-      es_tatuaje: parsed.es_tatuaje ?? true,
-      es_fineline_o_microrealismo: parsed.es_fineline_o_microrealismo ?? true,
-      contiene_cara: parsed.contiene_cara ?? false,
-      nudity_parcial: parsed.nudity_parcial ?? false,
-      motivo: parsed.motivo ?? '',
-      zona: parsed.zona ?? '',
-      tamaño: parsed.tamaño ?? '',
-      tags: parsed.tags ?? [],
-      alt_text: parsed.alt_text ?? '',
-      confidence: parsed.confianza ?? 0.5,
+      es_tatuaje:   parsed.es_tatuaje ?? true,
+      titulo:       parsed.titulo ?? '',
+      tags:         parsed.tags ?? [],
+      zona:         parsed.zona ?? '',
+      tamano:       parsed.tamano ?? '',
+      alt_text:     parsed.alt_text ?? '',
+      confidence:   parsed.confianza ?? 0.5,
     })
   } catch (e) {
     console.error('[analyze]', e)
+    // Return safe defaults — let user edit tags manually
     return NextResponse.json({
-      es_tatuaje: true, es_fineline_o_microrealismo: true,
-      contiene_cara: false, nudity_parcial: false,
-      motivo: '', zona: '', tamaño: '', tags: [], alt_text: '', confidence: 0.4,
+      es_tatuaje: true,
+      titulo: '',
+      tags: [], zona: '', tamano: '', alt_text: '', confidence: 0.4,
     })
   }
 }
