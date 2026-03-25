@@ -128,8 +128,8 @@ export async function getPhotosPage(
   let { data, error, count } = await q
 
   // Fallback if new columns don't exist yet in production
-  if (error && error.message.includes('column')) {
-    console.warn('[getPhotosPage] fallback select:', error.message)
+  if (error) {
+    console.warn('[query] fallback select:', error.message)
     let q2 = client
       .from('photos')
       .select(SELECT_PHOTO_FALLBACK, { count: 'exact' })

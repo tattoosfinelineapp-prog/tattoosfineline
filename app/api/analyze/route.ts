@@ -15,6 +15,14 @@ export async function POST(req: Request) {
   const file = formData.get('file') as File | null
   if (!file) return NextResponse.json({ error: 'No file' }, { status: 400 })
 
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('[analyze] ANTHROPIC_API_KEY not set')
+    return NextResponse.json({
+      error: 'ANTHROPIC_API_KEY no configurada en Vercel',
+      es_tatuaje: true, tags: [], zona: '', tamano: '', motivo: '', alt_text: '', confidence: 0.3,
+    })
+  }
+
   try {
     const bytes = await file.arrayBuffer()
     const base64 = Buffer.from(bytes).toString('base64')

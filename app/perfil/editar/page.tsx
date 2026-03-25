@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { ArrowLeft, Save, MapPin } from 'lucide-react'
+import { ArrowLeft, Save, MapPin, Camera } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 type CiudadSuggestion = {
@@ -33,6 +34,9 @@ export default function EditarPerfilPage() {
     auto_reply_enabled: false,
     auto_reply: '',
   })
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
@@ -49,10 +53,11 @@ export default function EditarPerfilPage() {
       setUserId(session.user.id)
       const { data } = await supabase
         .from('users')
-        .select('nombre, bio, instagram, tipo_cuenta, ciudad, lat, lng, country, precio_desde, messages_enabled, auto_reply_enabled, auto_reply')
+        .select('nombre, bio, instagram, tipo_cuenta, ciudad, lat, lng, country, precio_desde, messages_enabled, auto_reply_enabled, auto_reply, avatar')
         .eq('id', session.user.id)
         .single()
       if (data) {
+        setAvatarUrl(data.avatar ?? null)
         setTipoCuenta(data.tipo_cuenta ?? '')
         setCiudadInput(data.ciudad ?? '')
         setForm({
@@ -112,6 +117,47 @@ export default function EditarPerfilPage() {
     setShowSuggestions(false)
   }
 
+  const handleAvatarUpload = async (file: File) => {
+    setAvatarUploading(true)
+    try {
+      // Compress to 400x400
+      const bitmap = await createImageBitmap(file)
+      const canvas = document.createElement('canvas')
+      canvas.width = 400; canvas.height = 400
+      const ctx = canvas.getContext('2d')!
+      const size = Math.min(bitmap.width, bitmap.height)
+      const sx = (bitmap.width - size) / 2
+      const sy = (bitmap.height - size) / 2
+      ctx.drawImage(bitmap, sx, sy, size, size, 0, 0, 400, 400)
+      const blob = await new Promise<Blob>((resolve) =>
+        canvas.toBlob(b => resolve(b!), 'image/webp', 0.85)
+      )
+
+      const fileName = `${userId}/avatar-${Date.now()}.webp`
+      const { error: storErr } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, blob, { contentType: 'image/webp', upsert: true })
+
+      if (storErr) {
+        // Fallback: try photos bucket
+        const { error: storErr2 } = await supabase.storage
+          .from('photos')
+          .upload(`avatars/${fileName}`, blob, { contentType: 'image/webp', upsert: true })
+        if (storErr2) { setError('Error al subir avatar: ' + storErr2.message); setAvatarUploading(false); return }
+        const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(`avatars/${fileName}`)
+        setAvatarUrl(publicUrl)
+        await supabase.from('users').update({ avatar: publicUrl }).eq('id', userId)
+      } else {
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName)
+        setAvatarUrl(publicUrl)
+        await supabase.from('users').update({ avatar: publicUrl }).eq('id', userId)
+      }
+    } catch (e) {
+      setError('Error al procesar la imagen')
+    }
+    setAvatarUploading(false)
+  }
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -169,6 +215,43 @@ export default function EditarPerfilPage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-5">
+        {/* Avatar upload */}
+        <div className="flex justify-center mb-2">
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            className="relative group"
+            disabled={avatarUploading}
+          >
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt="" width={96} height={96} className="object-cover w-full h-full" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
+                  {form.nombre?.[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+            </div>
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {avatarUploading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Camera size={18} className="text-white" />
+              )}
+            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (f) handleAvatarUpload(f)
+              }}
+            />
+          </button>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Nombre</label>
           <input

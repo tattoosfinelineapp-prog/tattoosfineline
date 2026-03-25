@@ -117,66 +117,39 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        {/* Avatar + name row */}
-        <div className="flex items-start gap-4 px-4 pt-6 -mt-10 sm:-mt-14 mb-4">
-          <div className="w-20 h-20 min-w-[80px] min-h-[80px] rounded-full overflow-hidden bg-gray-200 shrink-0 border-4 border-white shadow-md">
+        {/* Avatar + name */}
+        <div className="flex items-center gap-4 p-4 -mt-10 sm:-mt-14 mb-2">
+          <div className="w-20 h-20 min-w-[80px] min-h-[80px] rounded-full overflow-hidden bg-gray-100 shrink-0 border-2 border-gray-200">
             {usuario.avatar ? (
-              <Image
-                src={usuario.avatar}
-                alt={displayName ?? ''}
-                width={96}
-                height={96}
-                className="object-cover w-full h-full"
-              />
+              <Image src={usuario.avatar} alt={displayName ?? ''} width={96} height={96} className="object-cover w-full h-full" />
             ) : (
               <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                <span className="text-3xl font-semibold text-gray-400">
-                  {(displayName ?? usuario.email)[0].toUpperCase()}
-                </span>
+                <span className="text-3xl font-semibold text-gray-400">{(displayName ?? usuario.email)[0].toUpperCase()}</span>
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0 pt-2">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl font-bold break-all leading-tight text-gray-900">
-                    {displayName ?? usuario.email.split('@')[0]}
-                  </h1>
-                  <TipoBadge tipo={usuario.tipo_cuenta} labelTatuador={t('tatuador')} labelEstudio={t('estudio')} />
-                </div>
-                {usuario.username && (
-                  <p className="text-sm text-gray-400 mt-0.5">@{usuario.username}</p>
-                )}
-                {usuario.ciudad && (
-                  <p className="text-xs text-gray-400 mt-0.5">{usuario.ciudad}</p>
-                )}
-              </div>
-              {/* Actions */}
-              {isOwnProfile ? (
-                <Link
-                  href="/perfil/editar"
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200 shrink-0"
-                >
-                  <Settings size={14} />
-                  {t('edit')}
-                </Link>
-              ) : (
-                <div className="flex items-center gap-2 shrink-0">
-                  <FollowButton
-                    targetUserId={usuario.id}
-                    initialFollowing={isFollowing}
-                  />
-                  <MessageButton
-                    targetUserId={usuario.id}
-                    targetName={displayName ?? usuario.email.split('@')[0]}
-                    targetAvatar={usuario.avatar}
-                    messagesEnabled={messagesEnabled}
-                  />
-                </div>
-              )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold truncate text-gray-900">{displayName ?? usuario.email.split('@')[0]}</h1>
+              <TipoBadge tipo={usuario.tipo_cuenta} labelTatuador={t('tatuador')} labelEstudio={t('estudio')} />
             </div>
+            {usuario.username && <p className="text-sm text-gray-500">@{usuario.username}</p>}
+            {usuario.ciudad && <p className="text-xs text-gray-400 mt-0.5">{usuario.ciudad}</p>}
           </div>
+        </div>
+
+        {/* Actions */}
+        <div className="px-4 mb-6">
+          {isOwnProfile ? (
+            <Link href="/perfil/editar" className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200">
+              <Settings size={14} /> {t('edit')}
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2">
+              <FollowButton targetUserId={usuario.id} initialFollowing={isFollowing} />
+              <MessageButton targetUserId={usuario.id} targetName={displayName ?? usuario.email.split('@')[0]} targetAvatar={usuario.avatar} messagesEnabled={messagesEnabled} />
+            </div>
+          )}
         </div>
 
         {/* Bio + links */}
