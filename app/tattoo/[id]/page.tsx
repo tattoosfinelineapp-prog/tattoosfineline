@@ -77,7 +77,7 @@ export default async function TattooPage({ params }: { params: { id: string } })
           </div>
 
           {tatuador && (
-            <Link href={`/perfil/${tatuador.username ?? tatuador.id}`}>
+            <Link href={`/${tatuador.username ?? tatuador.id}`}>
               <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
                 <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                   {tatuador.avatar ? (

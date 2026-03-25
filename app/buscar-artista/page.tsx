@@ -199,7 +199,7 @@ export default function BuscarArtistaPage() {
                 {resultados.map(r => (
                   <Link
                     key={r.id}
-                    href={`/perfil/${r.username ?? r.id}`}
+                    href={`/${r.username ?? r.id}`}
                     className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl hover:shadow-sm transition-shadow"
                   >
                     {r.foto_url && (

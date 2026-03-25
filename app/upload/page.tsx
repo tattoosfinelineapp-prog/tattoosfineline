@@ -340,7 +340,7 @@ export default function UploadPage() {
         <button onClick={() => { setItems([]); setStep('select') }} className="px-6 py-3 bg-gray-100 text-gray-700 text-sm font-medium rounded-2xl hover:bg-gray-200 transition-colors">
           Subir más
         </button>
-        <button onClick={() => router.push(`/perfil/${user.user_metadata?.username || user.id}`)} className="px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-2xl hover:bg-gray-800 transition-colors">
+        <button onClick={() => router.push(`/${user.user_metadata?.username || user.id}`)} className="px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-2xl hover:bg-gray-800 transition-colors">
           Ver mi perfil
         </button>
       </div>

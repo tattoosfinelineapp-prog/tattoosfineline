@@ -133,7 +133,7 @@ export default async function TendenciasPage() {
         <div className="mb-8">
           <h2 className="text-sm font-semibold text-gray-900 mb-3">Artista más activo</h2>
           <Link
-            href={`/perfil/${topUploader.username ?? topUploader.id}`}
+            href={`/${topUploader.username ?? topUploader.id}`}
             className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl hover:shadow-sm transition-shadow"
           >
             <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden shrink-0">

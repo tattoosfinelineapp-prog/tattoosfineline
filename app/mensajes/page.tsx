@@ -120,7 +120,7 @@ export default function MensajesPage() {
           <button onClick={() => setActiveChat(null)} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-50">
             <ArrowLeft size={18} />
           </button>
-          <Link href={`/perfil/${chatPartner.username ?? chatPartner.id}`} className="flex items-center gap-2.5">
+          <Link href={`/${chatPartner.username ?? chatPartner.id}`} className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-gray-100 overflow-hidden shrink-0">
               {chatPartner.avatar ? (
                 <Image src={chatPartner.avatar} alt="" width={36} height={36} className="object-cover w-full h-full" />

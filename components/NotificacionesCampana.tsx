@@ -169,7 +169,7 @@ export default function NotificacionesCampana() {
                     <p className="text-xs text-gray-400 mt-0.5">{timeAgo(n.created_at)}</p>
                     {n.from_user?.username && (
                       <Link
-                        href={`/perfil/${n.from_user.username}`}
+                        href={`/${n.from_user.username}`}
                         className="text-xs text-gray-500 hover:underline mt-0.5 block"
                         onClick={() => setOpen(false)}
                       >

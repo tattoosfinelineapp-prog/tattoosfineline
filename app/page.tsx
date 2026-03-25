@@ -209,7 +209,7 @@ export default async function Home() {
             </div>
           </div>
           <Link
-            href={featuredTatuador ? `/perfil/${featuredTatuador.username ?? featuredTatuador.id}` : '/galeria'}
+            href={featuredTatuador ? `/${featuredTatuador.username ?? featuredTatuador.id}` : '/galeria'}
             className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 p-5 max-w-xs hover:shadow-md transition-shadow"
           >
             <div className="flex items-center gap-3 mb-4">

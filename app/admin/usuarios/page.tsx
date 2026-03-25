@@ -137,7 +137,7 @@ export default function AdminUsuarios() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/perfil/${u.username ?? u.id}`}
+                        href={`/${u.username ?? u.id}`}
                         target="_blank"
                         className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
                         title="Ver perfil"

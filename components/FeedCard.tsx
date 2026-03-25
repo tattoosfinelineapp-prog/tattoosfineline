@@ -55,8 +55,8 @@ export default function FeedCard({ photo }: { photo: FeedPhoto }) {
   const firstTag = photo.tags?.[0]
 
   const profileHref = photo.autor.username
-    ? `/perfil/${photo.autor.username}`
-    : photo.autor.id ? `/perfil/${photo.autor.id}` : '#'
+    ? `/${photo.autor.username}`
+    : photo.autor.id ? `/${photo.autor.id}` : '#'
 
   return (
     <article className="bg-white border-b border-gray-100 pb-4 mb-2">

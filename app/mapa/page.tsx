@@ -145,7 +145,7 @@ export default function MapaPage() {
                   )}
                   <div className="px-3 pb-3">
                     <Link
-                      href={`/perfil/${t.username ?? t.id}`}
+                      href={`/${t.username ?? t.id}`}
                       className="block w-full text-center py-2 bg-gray-900 text-white text-xs font-medium rounded-xl hover:bg-gray-800 transition-colors"
                     >
                       Ver perfil →

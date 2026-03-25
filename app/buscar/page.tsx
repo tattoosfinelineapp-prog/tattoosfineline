@@ -24,7 +24,7 @@ function UserCard({ user }: { user: UserProfile }) {
     : user.nombre
 
   return (
-    <Link href={`/perfil/${user.username ?? user.id}`}>
+    <Link href={`/${user.username ?? user.id}`}>
       <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-colors border border-gray-100">
         <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0">
           {user.avatar ? (
@@ -324,7 +324,7 @@ function BuscarContent() {
               return (
                 <Link
                   key={u.id}
-                  href={`/perfil/${u.username ?? u.id}`}
+                  href={`/${u.username ?? u.id}`}
                   className="flex flex-col items-center gap-1.5 shrink-0 w-20 group"
                 >
                   <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden ring-2 ring-transparent group-hover:ring-gray-200 transition-all">

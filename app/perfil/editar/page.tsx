@@ -189,7 +189,7 @@ export default function EditarPerfilPage() {
     setSaving(false)
     if (err) { setError(err.message); return }
     setSuccess(true)
-    setTimeout(() => router.push(`/perfil/${username || userId}`), 1200)
+    setTimeout(() => router.push(`/${username || userId}`), 1200)
   }
 
   if (loading) {
@@ -208,7 +208,7 @@ export default function EditarPerfilPage() {
     <div className="max-w-lg mx-auto px-4 py-10 pb-24">
       <div className="flex items-center gap-3 mb-8">
         <Link
-          href={`/perfil/${username || userId}`}
+          href={`/${username || userId}`}
           className="p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors"
         >
           <ArrowLeft size={20} />

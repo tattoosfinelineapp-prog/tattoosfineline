@@ -49,7 +49,7 @@ export default async function FotoPage({ params }: Props) {
       </div>
 
       {tatuador && (
-        <Link href={`/perfil/${tatuador.username ?? tatuador.id}`} className="flex items-center gap-3 mb-4 group">
+        <Link href={`/${tatuador.username ?? tatuador.id}`} className="flex items-center gap-3 mb-4 group">
           <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden">
             {tatuador.avatar
               ? <Image src={tatuador.avatar} alt="" width={40} height={40} className="object-cover w-full h-full" />
