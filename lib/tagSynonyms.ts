@@ -153,4 +153,3 @@ export function expandQuery(query: string): string[] {
   const synonyms = SYNONYMS[normalized] ?? []
   return [normalized, ...synonyms]
 }
-// build trigger
