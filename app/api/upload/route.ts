@@ -16,7 +16,8 @@ function getAdminClient() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
