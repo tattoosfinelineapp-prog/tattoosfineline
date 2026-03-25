@@ -12,10 +12,14 @@ export default function EditarPerfilPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState('')
+  const [tipoCuenta, setTipoCuenta] = useState('')
   const [form, setForm] = useState({
     nombre: '',
     bio: '',
     instagram: '',
+    messages_enabled: false,
+    auto_reply_enabled: false,
+    auto_reply: '',
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -27,14 +31,18 @@ export default function EditarPerfilPage() {
       setUserId(session.user.id)
       const { data } = await supabase
         .from('users')
-        .select('nombre, bio, instagram')
+        .select('nombre, bio, instagram, tipo_cuenta, messages_enabled, auto_reply_enabled, auto_reply')
         .eq('id', session.user.id)
         .single()
       if (data) {
+        setTipoCuenta(data.tipo_cuenta ?? '')
         setForm({
           nombre: data.nombre ?? '',
           bio: data.bio ?? '',
           instagram: data.instagram ?? '',
+          messages_enabled: data.messages_enabled ?? false,
+          auto_reply_enabled: data.auto_reply_enabled ?? false,
+          auto_reply: data.auto_reply ?? '',
         })
       }
       setLoading(false)
@@ -52,6 +60,9 @@ export default function EditarPerfilPage() {
         nombre: form.nombre.trim(),
         bio: form.bio.trim(),
         instagram: form.instagram.trim(),
+        messages_enabled: form.messages_enabled,
+        auto_reply_enabled: form.auto_reply_enabled,
+        auto_reply: form.auto_reply.trim() || null,
       })
       .eq('id', userId)
     setSaving(false)
@@ -124,6 +135,57 @@ export default function EditarPerfilPage() {
             />
           </div>
         </div>
+
+        {/* Message settings — only for tatuadores/estudios */}
+        {(tipoCuenta === 'tatuador' || tipoCuenta === 'estudio') && (
+          <div className="border-t border-gray-100 pt-5 space-y-4">
+            <p className="text-sm font-semibold text-gray-900">Mensajes</p>
+
+            <label className="flex items-center justify-between cursor-pointer">
+              <div>
+                <p className="text-sm text-gray-700">Permitir mensajes</p>
+                <p className="text-xs text-gray-400">Los usuarios podrán enviarte mensajes directos</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={form.messages_enabled}
+                onChange={e => setForm(f => ({ ...f, messages_enabled: e.target.checked }))}
+                className="w-10 h-6 bg-gray-200 rounded-full relative appearance-none cursor-pointer checked:bg-gray-900 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:bg-white after:rounded-full after:transition-transform checked:after:translate-x-4"
+              />
+            </label>
+
+            {form.messages_enabled && (
+              <>
+                <label className="flex items-center justify-between cursor-pointer">
+                  <div>
+                    <p className="text-sm text-gray-700">Respuesta automática</p>
+                    <p className="text-xs text-gray-400">Se envía al recibir un mensaje</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.auto_reply_enabled}
+                    onChange={e => setForm(f => ({ ...f, auto_reply_enabled: e.target.checked }))}
+                    className="w-10 h-6 bg-gray-200 rounded-full relative appearance-none cursor-pointer checked:bg-gray-900 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:bg-white after:rounded-full after:transition-transform checked:after:translate-x-4"
+                  />
+                </label>
+
+                {form.auto_reply_enabled && (
+                  <div>
+                    <textarea
+                      value={form.auto_reply}
+                      onChange={e => setForm(f => ({ ...f, auto_reply: e.target.value }))}
+                      placeholder="Hola! Agendo por Instagram @usuario. ¡Gracias por escribir!"
+                      maxLength={200}
+                      rows={3}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all resize-none"
+                    />
+                    <p className="text-xs text-gray-400 mt-1 text-right">{form.auto_reply.length}/200</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {error && (
           <p className="text-sm text-red-500 bg-red-50 px-4 py-3 rounded-xl">{error}</p>

@@ -2,7 +2,7 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED = ['/upload', '/guardar', '/tablero', '/perfil/editar']
+const PROTECTED = ['/upload', '/guardar', '/tablero', '/perfil/editar', '/mensajes']
 const ADMIN_EMAIL = 'tattoosfinelineapp@gmail.com'
 const ADMIN_ID    = 'c01f31dd-5898-4a95-9061-ab66c65102df'
 

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getUserByUsername, getUserById, getPhotosByTatuador, getSavedPhotos, getCarpetas } from '@/lib/queries'
 import PerfilTabs from '@/components/PerfilTabs'
 import FollowButton from '@/components/FollowButton'
+import MessageButton from '@/components/MessageButton'
 import StatsTab from '@/components/StatsTab'
 import { Instagram, Settings, Globe } from 'lucide-react'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
@@ -78,10 +79,11 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
     )
     const { data: statsRow } = await admin
       .from('users')
-      .select('followers_count')
+      .select('followers_count, messages_enabled')
       .eq('id', usuario.id)
       .single()
     followersCount = statsRow?.followers_count ?? 0
+    var messagesEnabled = statsRow?.messages_enabled ?? false
   }
 
   const [fotos, guardadas, carpetas] = await Promise.all([
@@ -160,10 +162,18 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
               {t('edit')}
             </Link>
           ) : (
-            <FollowButton
-              targetUserId={usuario.id}
-              initialFollowing={isFollowing}
-            />
+            <div className="flex items-center gap-2">
+              <FollowButton
+                targetUserId={usuario.id}
+                initialFollowing={isFollowing}
+              />
+              <MessageButton
+                targetUserId={usuario.id}
+                targetName={displayName ?? usuario.email.split('@')[0]}
+                targetAvatar={usuario.avatar}
+                messagesEnabled={messagesEnabled}
+              />
+            </div>
           )}
         </div>
 
