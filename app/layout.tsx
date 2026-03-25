@@ -5,6 +5,7 @@ import NavBar from '@/components/NavBar'
 import BottomNav from '@/components/BottomNav'
 import { AuthProvider } from '@/components/AuthContext'
 import CtaBanner from '@/components/CtaBanner'
+import WelcomePopup from '@/components/WelcomePopup'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <NavBar />
           </Suspense>
           <CtaBanner />
+          <WelcomePopup />
           <main className="min-h-screen bg-white">
             {children}
           </main>

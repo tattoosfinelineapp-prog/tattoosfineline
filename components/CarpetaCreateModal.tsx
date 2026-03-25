@@ -76,7 +76,7 @@ export default function CarpetaCreateModal({ onClose, onCreated }: Props) {
           <div className="flex items-center gap-2">
             <FolderPlus size={18} className="text-gray-500" />
             <h3 className="font-semibold text-gray-900">
-              {step === 'nombre' ? 'Nueva carpeta' : step === 'tags' ? 'Tags por defecto' : '¡Lista! 🎉'}
+              {step === 'nombre' ? 'Nueva carpeta' : step === 'tags' ? 'Tags por defecto' : '¡Lista!'}
             </h3>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors">
@@ -212,7 +212,6 @@ export default function CarpetaCreateModal({ onClose, onCreated }: Props) {
         {/* ── PASO 3: Confirmación ─────────────── */}
         {step === 'done' && (
           <div className="p-8 text-center">
-            <div className="text-5xl mb-4">🎉</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">
               &ldquo;{nombre}&rdquo; está lista
             </h3>

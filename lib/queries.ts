@@ -114,14 +114,21 @@ export async function getPhotoCount(): Promise<number> {
 
 export async function getLandingPhotos(limit = 12): Promise<Tattoo[]> {
   if (!hasEnvVars()) return []
+  // Fetch a larger set and shuffle server-side for variety on each load
   const { data, error } = await getClient()
     .from('photos')
     .select(SELECT_PHOTO)
     .eq('status', 'published')
-    .order('likes', { ascending: false })
-    .limit(limit)
+    .order('created_at', { ascending: false })
+    .limit(limit * 4)
   if (error) return []
-  return (data as unknown as PhotoRow[]).map(mapPhoto)
+  const all = (data as unknown as PhotoRow[]).map(mapPhoto)
+  // Fisher-Yates shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]]
+  }
+  return all.slice(0, limit)
 }
 
 export async function getPhotoById(id: string): Promise<Tattoo | null> {

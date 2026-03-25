@@ -14,15 +14,15 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 function TipoBadge({ tipo }: { tipo: string | null }) {
   if (tipo === 'tatuador') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gray-900 text-white text-xs font-medium rounded-full">
-        🎨 Tatuador
+      <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+        Tatuador
       </span>
     )
   }
   if (tipo === 'estudio') {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full border border-gray-200">
-        🏠 Estudio
+      <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-900 text-white text-xs font-medium rounded-full">
+        Estudio
       </span>
     )
   }

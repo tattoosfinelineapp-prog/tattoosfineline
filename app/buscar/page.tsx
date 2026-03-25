@@ -40,10 +40,10 @@ function UserCard({ user }: { user: UserProfile }) {
           <div className="flex items-center gap-1.5">
             <p className="font-medium text-gray-900 truncate text-sm">{nombre ?? user.email.split('@')[0]}</p>
             {user.tipo_cuenta === 'tatuador' && (
-              <span className="text-xs bg-gray-900 text-white px-1.5 py-0.5 rounded-full shrink-0">🎨</span>
+              <span className="text-xs bg-gray-900 text-white px-2 py-0.5 rounded-full shrink-0 font-medium">Tatuador</span>
             )}
             {user.tipo_cuenta === 'estudio' && (
-              <span className="text-xs bg-gray-100 text-gray-600 border border-gray-200 px-1.5 py-0.5 rounded-full shrink-0">🏠</span>
+              <span className="text-xs bg-gray-900 text-white px-2 py-0.5 rounded-full shrink-0 font-medium">Estudio</span>
             )}
           </div>
           {user.username && <p className="text-xs text-gray-400">@{user.username}</p>}

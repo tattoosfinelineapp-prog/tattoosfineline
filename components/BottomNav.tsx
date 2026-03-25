@@ -10,15 +10,15 @@ export default function BottomNav() {
   const { user, openAuthModal } = useAuth()
 
   const items = [
-    { href: '/', icon: Home, label: 'Inicio' },
-    { href: '/buscar', icon: Search, label: 'Buscar' },
-    { href: '/upload', icon: Upload, label: 'Subir', requiresAuth: true },
+    { href: '/',        icon: Home,     label: 'Inicio' },
+    { href: '/buscar',  icon: Search,   label: 'Buscar' },
+    { href: '/upload',  icon: Upload,   label: 'Subir',    requiresAuth: true },
     { href: '/guardar', icon: Bookmark, label: 'Guardados', requiresAuth: true },
     { href: user ? `/perfil/${user.id}` : null, icon: User, label: 'Perfil', requiresAuth: true },
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 md:hidden safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#111111] md:hidden safe-area-inset-bottom">
       <div className="flex items-stretch h-16">
         {items.map(item => {
           const isActive = item.href
@@ -32,9 +32,9 @@ export default function BottomNav() {
               <button
                 key={item.label}
                 onClick={() => openAuthModal('login')}
-                className="flex-1 flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-700 transition-colors"
+                className="flex-1 flex flex-col items-center justify-center gap-1 text-white/40 hover:text-white transition-colors"
               >
-                <item.icon size={22} />
+                <item.icon size={22} strokeWidth={1.8} />
                 <span className="text-[10px]">{item.label}</span>
               </button>
             )
@@ -47,7 +47,7 @@ export default function BottomNav() {
               key={item.label}
               href={item.href}
               className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${
-                isActive ? 'text-gray-900' : 'text-gray-400 hover:text-gray-700'
+                isActive ? 'text-white' : 'text-white/40 hover:text-white/70'
               }`}
             >
               <item.icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />

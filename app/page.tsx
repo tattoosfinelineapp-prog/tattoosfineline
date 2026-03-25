@@ -175,7 +175,9 @@ export default async function Home() {
           </div>
           <div className="flex-1 bg-white rounded-3xl shadow-sm border border-gray-100 p-5 max-w-xs">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg">🎨</div>
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <span className="text-sm font-bold text-gray-500">ST</span>
+              </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">Sinkply Tattoo</p>
                 <p className="text-xs text-gray-400">Fine line · Madrid</p>
@@ -190,12 +192,8 @@ export default async function Home() {
             </div>
             <div className="flex gap-4 text-center pt-2 border-t border-gray-50">
               <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">{total > 0 ? total.toLocaleString('es') : '1.156'}</p>
+                <p className="text-sm font-semibold text-gray-900">{total > 0 ? total.toLocaleString('es') : '—'}</p>
                 <p className="text-xs text-gray-400">fotos</p>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-gray-900">2.4k</p>
-                <p className="text-xs text-gray-400">seguidores</p>
               </div>
             </div>
           </div>
