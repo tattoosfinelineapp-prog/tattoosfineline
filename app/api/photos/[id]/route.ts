@@ -24,22 +24,31 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     .eq('id', params.id)
     .single()
 
+  console.log('[delete-photo] id:', params.id, 'photo found:', !!photo)
   if (!photo) return NextResponse.json({ error: 'Foto no encontrada' }, { status: 404 })
+
+  console.log('[delete-photo] owner:', photo.tatuador_id, 'session:', session.user.id, 'match:', photo.tatuador_id === session.user.id)
   if (photo.tatuador_id !== session.user.id) {
     return NextResponse.json({ error: 'No tienes permiso' }, { status: 403 })
   }
 
   // Delete from Storage
   if (photo.url) {
-    const urlObj = new URL(photo.url)
-    const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/photos\/(.+)/)
-    if (pathMatch) {
-      await admin.storage.from('photos').remove([pathMatch[1]])
+    try {
+      const urlObj = new URL(photo.url)
+      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/photos\/(.+)/)
+      if (pathMatch) {
+        const { error: storErr } = await admin.storage.from('photos').remove([pathMatch[1]])
+        console.log('[delete-photo] storage delete:', pathMatch[1], storErr ? `ERROR: ${storErr.message}` : 'OK')
+      }
+    } catch (e) {
+      console.error('[delete-photo] storage error:', e)
     }
   }
 
   // Delete from DB
-  await admin.from('photos').delete().eq('id', params.id)
+  const { error: dbErr } = await admin.from('photos').delete().eq('id', params.id)
+  console.log('[delete-photo] db delete:', dbErr ? `ERROR: ${dbErr.message}` : 'OK')
 
   // Revalidate
   revalidatePath('/galeria')

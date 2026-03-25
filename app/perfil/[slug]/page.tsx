@@ -93,44 +93,28 @@ export default async function PerfilPage({ params }: { params: { slug: string } 
   ])
 
   const totalLikes = fotos.reduce((sum, f) => sum + (f.likes ?? 0), 0)
-  const bannerUrl = fotos[0]?.url ?? null
 
   const displayName = usuario.tipo_cuenta === 'estudio'
     ? (usuario.nombre_estudio ?? usuario.nombre)
     : usuario.nombre
 
   return (
-    <div className="pb-20">
-      {/* Banner */}
-      <div className="relative h-40 sm:h-56 bg-gray-100 overflow-hidden">
-        {bannerUrl && (
-          <Image
-            src={bannerUrl}
-            alt=""
-            fill
-            className="object-cover opacity-60 blur-[2px] scale-105"
-            sizes="100vw"
-            priority
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/80" />
-      </div>
-
+    <div className="pb-20 bg-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Avatar + name */}
-        <div className="flex items-center gap-4 p-4 -mt-10 sm:-mt-14 mb-2">
-          <div className="relative w-24 h-24 shrink-0">
+        <div className="px-4 pt-6 pb-4 flex items-center gap-4">
+          <div className="w-20 h-20 shrink-0 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
             {usuario.avatar ? (
-              <Image src={usuario.avatar} alt={displayName ?? ''} fill className="rounded-full object-cover border-2 border-gray-200" sizes="96px" />
+              <Image src={usuario.avatar} alt={displayName ?? ''} width={80} height={80} className="object-cover w-full h-full" />
             ) : (
-              <div className="w-full h-full rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center">
-                <span className="text-3xl font-semibold text-gray-400">{(displayName ?? usuario.email)[0].toUpperCase()}</span>
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-2xl font-semibold text-gray-400">{(displayName ?? usuario.email)[0].toUpperCase()}</span>
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0">
+          <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold truncate text-gray-900">{displayName ?? usuario.email.split('@')[0]}</h1>
+              <h1 className="text-lg font-semibold text-gray-900">{displayName ?? usuario.email.split('@')[0]}</h1>
               <TipoBadge tipo={usuario.tipo_cuenta} labelTatuador={t('tatuador')} labelEstudio={t('estudio')} />
             </div>
             {usuario.username && <p className="text-sm text-gray-500">@{usuario.username}</p>}
