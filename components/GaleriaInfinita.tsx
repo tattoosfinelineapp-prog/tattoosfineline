@@ -73,10 +73,24 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
           const res = await fetch(`/api/photos?${params}`)
           const { photos: newPhotos, total: newTotal } = await res.json()
 
+          let finalPhotos = newPhotos as Tattoo[]
+
+          // If filtered results run out, fetch popular photos to keep scrolling
+          if (finalPhotos.length === 0 && queryRef.current) {
+            const fallbackParams = new URLSearchParams({
+              page: String(pageRef.current),
+              limit: String(PAGE_SIZE),
+              orden: 'guardados',
+            })
+            const fbRes = await fetch(`/api/photos?${fallbackParams}`)
+            const fbData = await fbRes.json()
+            finalPhotos = fbData.photos ?? []
+          }
+
           setPhotos(prev => {
             const ids = new Set(prev.map(p => p.id))
-            const merged = [...prev, ...(newPhotos as Tattoo[]).filter(p => !ids.has(p.id))]
-            const isDone = merged.length >= newTotal
+            const merged = [...prev, ...finalPhotos.filter(p => !ids.has(p.id))]
+            const isDone = finalPhotos.length === 0
             doneRef.current = isDone
             setDone(isDone)
             return merged
@@ -134,9 +148,9 @@ export default function GaleriaInfinita({ initialPhotos, initialTotal, query = '
       )}
 
       {done && photos.length > 0 && !loading && (
-        <p className="text-center text-sm text-gray-400 py-10">
-          {photos.length.toLocaleString('es')} de {total.toLocaleString('es')} tatuajes
-        </p>
+        <div className="text-center py-10">
+          <p className="text-sm text-gray-300">Has visto todos los tatuajes disponibles</p>
+        </div>
       )}
     </div>
   )

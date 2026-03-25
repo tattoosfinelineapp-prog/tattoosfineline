@@ -144,13 +144,6 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
               </button>
             </div>
 
-            {/* Details */}
-            <div className="text-xs text-gray-400 space-y-1 mb-6">
-              {tattoo.motivo && <p>Motivo: <span className="text-gray-600">{tattoo.motivo}</span></p>}
-              {tattoo.zona && <p>Zona: <span className="text-gray-600">{tattoo.zona}</span></p>}
-              {tattoo.tamaño && <p>Tamaño: <span className="text-gray-600">{tattoo.tamaño}</span></p>}
-            </div>
-
             {/* Similar photos */}
             {similares.length > 0 && (
               <div className="mt-auto">

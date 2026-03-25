@@ -14,7 +14,7 @@ export default async function Home() {
   const t = await getTranslations('Landing')
 
   const [bgPhotos, total, carpetasData, topTatuadores] = await Promise.all([
-    getLandingPhotos(16),
+    getLandingPhotos(6),
     getPhotoCount(),
     getLandingCarpetas(4),
     getTopTatuadores(1),
