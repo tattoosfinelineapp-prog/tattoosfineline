@@ -5,12 +5,6 @@ import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
-  return createClient(url, key)
-}
-
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
@@ -19,27 +13,33 @@ export async function GET(request: Request) {
 
   if (!code) {
     console.error('[auth/callback] No code in URL')
-    return NextResponse.redirect(new URL('/?error=auth_failed', request.url))
+    return NextResponse.redirect(new URL('/?error=auth_failed', origin))
   }
 
-  const supabase = createRouteHandlerClient({ cookies })
+  // IMPORTANT: call cookies() first, then pass as () => cookieStore
+  // so auth-helpers can write Set-Cookie headers on this response.
+  const cookieStore = cookies()
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+
   const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error || !data.session?.user) {
     console.error('[auth/callback] exchangeCodeForSession error:', error?.message ?? 'no session')
-    return NextResponse.redirect(new URL('/?error=auth_failed', request.url))
+    return NextResponse.redirect(new URL('/?error=auth_failed', origin))
   }
 
   const user = data.session.user
-  console.log('[auth/callback] session OK, user:', user.id, user.email, 'provider:', user.app_metadata?.provider)
+  console.log('[auth/callback] session OK, user:', user.id, 'provider:', user.app_metadata?.provider)
 
-  // Upsert into public.users — handle Google OAuth metadata correctly
+  // Upsert public.users via service role (bypasses RLS, handles Google metadata)
   let isNewUser = false
   try {
-    const admin = getAdminClient()
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
     const meta = user.user_metadata ?? {}
 
-    // Check if user already exists (to detect new vs returning)
     const { data: existing } = await admin
       .from('users')
       .select('onboarding_done')
@@ -51,23 +51,27 @@ export async function GET(request: Request) {
     const { error: upsertError } = await admin
       .from('users')
       .upsert({
-        id: user.id,
-        email: user.email ?? '',
-        nombre: meta.full_name ?? meta.name ?? user.email?.split('@')[0] ?? '',
-        avatar: meta.avatar_url ?? meta.picture ?? null,
-        tipo: 'cliente',            // original schema column (NOT NULL)
-        tipo_cuenta: 'inspiracion', // v2 schema column — default for Google sign-ups
+        id:          user.id,
+        email:       user.email ?? '',
+        nombre:      meta.full_name ?? meta.name ?? user.email?.split('@')[0] ?? '',
+        avatar:      meta.avatar_url ?? meta.picture ?? null,
+        tipo:        'cliente',
+        tipo_cuenta: 'inspiracion',
+        username:    (meta.email ?? user.email ?? '')
+                       .split('@')[0]
+                       .toLowerCase()
+                       .replace(/[^a-z0-9_]/g, '') || null,
       }, { onConflict: 'id', ignoreDuplicates: false })
 
     if (upsertError) {
       console.error('[auth/callback] upsert error:', upsertError.message)
     } else {
-      console.log('[auth/callback] upsert OK, new user:', isNewUser)
+      console.log('[auth/callback] upsert OK, isNew:', isNewUser)
     }
   } catch (e) {
     console.error('[auth/callback] upsert exception:', e)
   }
 
   const dest = isNewUser ? '/onboarding' : '/galeria'
-  return NextResponse.redirect(new URL(dest, request.url))
+  return NextResponse.redirect(new URL(dest, origin))
 }
