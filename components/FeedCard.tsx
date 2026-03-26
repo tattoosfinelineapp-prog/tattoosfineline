@@ -38,12 +38,12 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function FeedCard({ photo }: { photo: FeedPhoto }) {
-  const { user, toggleLike, openSaveModal, openAuthModal } = useAuth()
+  const { user, toggleLove, openSaveModal, openAuthModal } = useAuth()
   const router = useRouter()
 
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault()
-    toggleLike(photo.id)
+    toggleLove(photo.id)
   }
 
   const handleSave = (e: React.MouseEvent) => {

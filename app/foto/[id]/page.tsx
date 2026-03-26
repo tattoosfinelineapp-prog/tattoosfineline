@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getPhotoById, getUserById } from '@/lib/queries'
@@ -13,21 +13,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const tattoo = await getPhotoById(params.id)
   if (!tattoo) return { title: 'Foto no encontrada' }
 
+  const tatuador = tattoo.tatuador_id ? await getUserById(tattoo.tatuador_id) : null
+  const tags = tattoo.tags.join(', ')
+  const ciudad = tatuador?.ciudad ?? ''
+  const autor = tatuador?.nombre ?? tattoo.tatuador
+  const title = `${tags || 'Fine line tattoo'} · tattoosfineline`
+  const desc = `Tatuaje de ${tags}${tattoo.zona ? ` en ${tattoo.zona}` : ''} por ${autor}${ciudad ? ` en ${ciudad}` : ''}`
+
   return {
-    title: `${tattoo.alt_text || tattoo.title} — tattoosfineline`,
-    description: `${tattoo.alt_text || tattoo.title}. Tags: ${tattoo.tags.join(', ')}. Por ${tattoo.tatuador}.`,
+    title,
+    description: desc,
+    keywords: [...tattoo.tags, 'fine line', 'tatuaje', ciudad].filter(Boolean).join(', '),
     openGraph: {
-      title: tattoo.alt_text || tattoo.title,
-      description: `Tatuaje fine line: ${tattoo.tags.join(', ')}. Por ${tattoo.tatuador}`,
+      title,
+      description: desc,
       images: [{ url: tattoo.url, width: 400, height: tattoo.height || 400 }],
       type: 'article',
       siteName: 'tattoosfineline',
       url: `https://tattoosfineline.com/foto/${params.id}`,
     },
-    twitter: {
-      card: 'summary_large_image',
-      title: tattoo.alt_text || tattoo.title,
-      images: [tattoo.url],
+    twitter: { card: 'summary_large_image', title, images: [tattoo.url] },
+    other: {
+      'schema:type': 'ImageObject',
     },
   }
 }
@@ -38,14 +45,25 @@ export default async function FotoPage({ params }: Props) {
 
   const tatuador = tattoo.tatuador_id ? await getUserById(tattoo.tatuador_id) : null
 
+  const schemaOrg = {
+    '@context': 'https://schema.org',
+    '@type': 'ImageObject',
+    contentUrl: tattoo.url,
+    description: tattoo.alt_text || tattoo.tags.join(', '),
+    name: tattoo.tags.join(', '),
+    author: tatuador ? { '@type': 'Person', name: tatuador.nombre, url: `https://tattoosfineline.com/${tatuador.username ?? tatuador.id}` } : undefined,
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }} />
+
       <Link href="/galeria" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-700 mb-6 transition-colors">
         <ArrowLeft size={16} /> Ver galería
       </Link>
 
       <div className="rounded-2xl overflow-hidden bg-gray-100 mb-6">
-        <Image src={tattoo.url} alt={tattoo.alt_text || tattoo.title} width={800} height={tattoo.height || 600} className="w-full h-auto" priority />
+        <Image src={tattoo.url} alt={tattoo.alt_text || tattoo.tags.join(', ')} width={800} height={tattoo.height || 600} className="w-full h-auto" priority />
       </div>
 
       {tatuador && (

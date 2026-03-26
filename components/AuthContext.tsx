@@ -19,11 +19,13 @@ type AuthContextType = {
   session: Session | null
   username: string | null
   authReady: boolean
-  likedIds: Set<string>
+  lovedIds: Set<string>
+  wantedIds: Set<string>
   savedIds: Set<string>
   openAuthModal: (mode?: 'login' | 'register') => void
   signOut: () => Promise<void>
-  toggleLike: (photoId: string) => Promise<void>
+  toggleLove: (photoId: string) => Promise<void>
+  toggleWant: (photoId: string) => Promise<void>
   openSaveModal: (photoId: string) => void
   toggleSave: (photoId: string) => Promise<void>
   likeToast: boolean
@@ -34,11 +36,13 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   username: null,
   authReady: false,
-  likedIds: new Set(),
+  lovedIds: new Set(),
+  wantedIds: new Set(),
   savedIds: new Set(),
   openAuthModal: () => {},
   signOut: async () => {},
-  toggleLike: async () => {},
+  toggleLove: async () => {},
+  toggleWant: async () => {},
   openSaveModal: () => {},
   toggleSave: async () => {},
   likeToast: false,
@@ -62,7 +66,8 @@ export function AuthProvider({
   // Starts true if the server already gave us a session, so WelcomePopup never fires falsely.
   const [authReady, setAuthReady] = useState(initialSession !== null)
   const [username, setUsername] = useState<string | null>(null)
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+  const [lovedIds, setLovedIds] = useState<Set<string>>(new Set())
+  const [wantedIds, setWantedIds] = useState<Set<string>>(new Set())
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'login' | 'register'>('login')
@@ -72,12 +77,14 @@ export function AuthProvider({
 
   const loadUserData = useCallback(
     async (userId: string) => {
-      const [likesRes, savesRes, userRes] = await Promise.all([
-        supabase.from('likes').select('photo_id').eq('user_id', userId),
+      const [lovesRes, wantsRes, savesRes, userRes] = await Promise.all([
+        supabase.from('likes').select('photo_id').eq('user_id', userId).eq('tipo', 'love'),
+        supabase.from('likes').select('photo_id').eq('user_id', userId).eq('tipo', 'want'),
         supabase.from('saves').select('photo_id').eq('user_id', userId),
         supabase.from('users').select('username').eq('id', userId).single(),
       ])
-      if (likesRes.data) setLikedIds(new Set(likesRes.data.map((r: { photo_id: string }) => r.photo_id)))
+      if (lovesRes.data) setLovedIds(new Set(lovesRes.data.map((r: { photo_id: string }) => r.photo_id)))
+      if (wantsRes.data) setWantedIds(new Set(wantsRes.data.map((r: { photo_id: string }) => r.photo_id)))
       if (savesRes.data) setSavedIds(new Set(savesRes.data.map((r: { photo_id: string }) => r.photo_id)))
       if (userRes.data?.username) setUsername(userRes.data.username)
     },
@@ -94,7 +101,8 @@ export function AuthProvider({
       setUser(session?.user ?? null)
       setAuthReady(true)  // auth state is now known — safe for WelcomePopup to check
       if (!session) {
-        setLikedIds(new Set())
+        setLovedIds(new Set())
+        setWantedIds(new Set())
         setSavedIds(new Set())
         setUsername(null)
       }
@@ -112,28 +120,37 @@ export function AuthProvider({
     await supabase.auth.signOut()
   }, [supabase])
 
-  const toggleLike = useCallback(
+  const toggleLove = useCallback(
     async (photoId: string) => {
       if (!user) { openAuthModal(); return }
-      const isLiked = likedIds.has(photoId)
-      setLikedIds(prev => {
-        const next = new Set(prev)
-        isLiked ? next.delete(photoId) : next.add(photoId)
-        return next
+      const isLoved = lovedIds.has(photoId)
+      setLovedIds(prev => { const n = new Set(prev); isLoved ? n.delete(photoId) : n.add(photoId); return n })
+      await fetch('/api/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo_id: photoId, tipo: 'love', action: isLoved ? 'unlike' : 'like' }),
       })
-      if (isLiked) {
-        await supabase.from('likes').delete().eq('user_id', user.id).eq('photo_id', photoId)
-      } else {
-        await supabase.from('likes').insert({ user_id: user.id, photo_id: photoId })
-        // Show upload incentive toast once per session
-        if (!likeToastShownRef.current) {
-          likeToastShownRef.current = true
-          setLikeToast(true)
-          setTimeout(() => setLikeToast(false), 4000)
-        }
+      if (!isLoved && !likeToastShownRef.current) {
+        likeToastShownRef.current = true
+        setLikeToast(true)
+        setTimeout(() => setLikeToast(false), 4000)
       }
     },
-    [user, likedIds, openAuthModal, supabase]
+    [user, lovedIds, openAuthModal]
+  )
+
+  const toggleWant = useCallback(
+    async (photoId: string) => {
+      if (!user) { openAuthModal(); return }
+      const isWanted = wantedIds.has(photoId)
+      setWantedIds(prev => { const n = new Set(prev); isWanted ? n.delete(photoId) : n.add(photoId); return n })
+      await fetch('/api/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo_id: photoId, tipo: 'want', action: isWanted ? 'unlike' : 'like' }),
+      })
+    },
+    [user, wantedIds, openAuthModal]
   )
 
   // Opens the SaveModal — if already saved, toggles directly (unsave)
@@ -194,7 +211,7 @@ export function AuthProvider({
 
   return (
     <AuthContext.Provider
-      value={{ user, session, username, authReady, likedIds, savedIds, openAuthModal, signOut, toggleLike, openSaveModal, toggleSave, likeToast }}
+      value={{ user, session, username, authReady, lovedIds, wantedIds, savedIds, openAuthModal, signOut, toggleLove, toggleWant, openSaveModal, toggleSave, likeToast }}
     >
       {children}
       {/* Like incentive toast — show once per session after first like */}

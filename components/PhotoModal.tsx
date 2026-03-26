@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { X, Heart, Bookmark, Share2, User, ExternalLink } from 'lucide-react'
+import { X, Heart, Flame, Bookmark, Share2, User } from 'lucide-react'
 import { useAuth } from './AuthContext'
 import type { Tattoo } from '@/lib/data'
 
@@ -13,11 +13,12 @@ type Props = {
 }
 
 export default function PhotoModal({ tattoo, onClose }: Props) {
-  const { user, likedIds, savedIds, toggleLike, openSaveModal, openAuthModal } = useAuth()
+  const { user, lovedIds, wantedIds, savedIds, toggleLove, toggleWant, openSaveModal, openAuthModal } = useAuth()
   const [similares, setSimilares] = useState<Tattoo[]>([])
   const [copied, setCopied] = useState(false)
 
-  const isLiked = likedIds.has(tattoo.id)
+  const isLoved = lovedIds.has(tattoo.id)
+  const isWanted = wantedIds.has(tattoo.id)
   const isSaved = savedIds.has(tattoo.id)
 
   useEffect(() => {
@@ -116,15 +117,24 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
             )}
 
             {/* Actions */}
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
               <button
-                onClick={() => user ? toggleLike(tattoo.id) : openAuthModal()}
+                onClick={() => user ? toggleLove(tattoo.id) : openAuthModal()}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  isLiked ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  isLoved ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
-                {tattoo.likes}
+                <Heart size={16} fill={isLoved ? 'currentColor' : 'none'} />
+                Me encanta
+              </button>
+              <button
+                onClick={() => user ? toggleWant(tattoo.id) : openAuthModal()}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  isWanted ? 'bg-orange-50 text-orange-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Flame size={16} fill={isWanted ? 'currentColor' : 'none'} />
+                Lo quiero
               </button>
               <button
                 onClick={() => user ? openSaveModal(tattoo.id) : openAuthModal()}
@@ -133,7 +143,7 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
                 }`}
               >
                 <Bookmark size={16} fill={isSaved ? 'currentColor' : 'none'} />
-                {isSaved ? 'Guardada' : 'Guardar'}
+                Guardar
               </button>
               <button
                 onClick={share}

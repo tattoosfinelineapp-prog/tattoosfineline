@@ -31,6 +31,10 @@ export default function EditarPerfilPage() {
     lng: null as number | null,
     country: '',
     precio_desde: '',
+    anios_experiencia: '',
+    slot_sobre_mi: '',
+    slot_estilo: '',
+    slot_agendar: '',
     messages_enabled: false,
     auto_reply_enabled: false,
     auto_reply: '',
@@ -56,7 +60,7 @@ export default function EditarPerfilPage() {
       setUserId(session.user.id)
       const { data } = await supabase
         .from('users')
-        .select('nombre, bio, instagram, tipo_cuenta, ciudad, lat, lng, country, precio_desde, messages_enabled, auto_reply_enabled, auto_reply, avatar, username')
+        .select('nombre, bio, instagram, tipo_cuenta, ciudad, lat, lng, country, precio_desde, anios_experiencia, slot_sobre_mi, slot_estilo, slot_agendar, messages_enabled, auto_reply_enabled, auto_reply, avatar, username')
         .eq('id', session.user.id)
         .single()
       if (data) {
@@ -74,6 +78,10 @@ export default function EditarPerfilPage() {
           lng: data.lng ?? null,
           country: data.country ?? '',
           precio_desde: data.precio_desde ? String(data.precio_desde) : '',
+          anios_experiencia: data.anios_experiencia ? String(data.anios_experiencia) : '',
+          slot_sobre_mi: data.slot_sobre_mi ?? '',
+          slot_estilo: data.slot_estilo ?? '',
+          slot_agendar: data.slot_agendar ?? '',
           messages_enabled: data.messages_enabled ?? false,
           auto_reply_enabled: data.auto_reply_enabled ?? false,
           auto_reply: data.auto_reply ?? '',
@@ -197,6 +205,10 @@ export default function EditarPerfilPage() {
       messages_enabled: form.messages_enabled,
       auto_reply_enabled: form.auto_reply_enabled,
       auto_reply: form.auto_reply.trim() || null,
+      anios_experiencia: form.anios_experiencia ? parseInt(form.anios_experiencia) : null,
+      slot_sobre_mi: form.slot_sobre_mi.trim() || null,
+      slot_estilo: form.slot_estilo.trim() || null,
+      slot_agendar: form.slot_agendar.trim() || null,
     }
     if (form.precio_desde) {
       updateData.precio_desde = parseInt(form.precio_desde) || null
@@ -400,6 +412,36 @@ export default function EditarPerfilPage() {
                 className="w-full pl-[160px] pr-10 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all"
               />
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">€</span>
+            </div>
+          </div>
+        )}
+
+        {/* Professional fields — only for tatuadores/estudios */}
+        {(tipoCuenta === 'tatuador' || tipoCuenta === 'estudio') && (
+          <div className="border-t border-gray-100 pt-5 space-y-4">
+            <p className="text-sm font-semibold text-gray-900">Perfil profesional</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Años de experiencia</label>
+              <input type="number" value={form.anios_experiencia} onChange={e => setForm(f => ({ ...f, anios_experiencia: e.target.value }))}
+                placeholder="5" min={0} max={50} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Sobre mí</label>
+              <textarea value={form.slot_sobre_mi} onChange={e => setForm(f => ({ ...f, slot_sobre_mi: e.target.value }))}
+                placeholder="Cuéntales quién eres y qué te apasiona..." maxLength={500} rows={3}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all resize-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mi estilo favorito</label>
+              <textarea value={form.slot_estilo} onChange={e => setForm(f => ({ ...f, slot_estilo: e.target.value }))}
+                placeholder="Fine line, microrealismo, minimalista..." maxLength={500} rows={2}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all resize-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Cómo agendar conmigo</label>
+              <textarea value={form.slot_agendar} onChange={e => setForm(f => ({ ...f, slot_agendar: e.target.value }))}
+                placeholder="Agendo por Instagram DM o WhatsApp..." maxLength={500} rows={2}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-400 focus:bg-white transition-all resize-none" />
             </div>
           </div>
         )}

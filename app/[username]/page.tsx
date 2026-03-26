@@ -5,6 +5,7 @@ import { getUserByUsername, getUserById, getPhotosByTatuador, getSavedPhotos, ge
 import PerfilTabs from '@/components/PerfilTabs'
 import FollowButton from '@/components/FollowButton'
 import MessageButton from '@/components/MessageButton'
+import ProfileViewTracker from '@/components/ProfileViewTracker'
 import StatsTab from '@/components/StatsTab'
 import { Instagram, Settings, Globe } from 'lucide-react'
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
@@ -119,27 +120,58 @@ export default async function UserProfilePage({ params }: { params: { username: 
           )}
         </div>
 
-        {/* Bio + links */}
-        <div className="mb-6 space-y-2">
+        {/* View tracker */}
+        {!isOwnProfile && <ProfileViewTracker profileId={usuario.id} />}
+
+        {/* Bio + chips */}
+        <div className="mb-6 space-y-3">
           {usuario.bio && <p className="text-sm text-gray-500 max-w-xl">{usuario.bio}</p>}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {usuario.precio_desde && (
+              <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">desde {usuario.precio_desde}€</span>
+            )}
+            {usuario.anios_experiencia && (
+              <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">{usuario.anios_experiencia} años exp.</span>
+            )}
             {usuario.instagram && (
               <a href={`https://instagram.com/${usuario.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 transition-colors">
-                <Instagram size={13} /> {usuario.instagram}
+                className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors">
+                <span className="flex items-center gap-1"><Instagram size={11} /> {usuario.instagram}</span>
               </a>
             )}
             {usuario.web && (
               <a href={usuario.web.startsWith('http') ? usuario.web : `https://${usuario.web}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-700 transition-colors">
-                <Globe size={13} /> {usuario.web.replace(/^https?:\/\//, '')}
+                className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors">
+                <span className="flex items-center gap-1"><Globe size={11} /> {usuario.web.replace(/^https?:\/\//, '')}</span>
               </a>
-            )}
-            {usuario.direccion && usuario.tipo_cuenta === 'estudio' && (
-              <span className="text-sm text-gray-400">{usuario.direccion}</span>
             )}
           </div>
         </div>
+
+        {/* Professional slots */}
+        {(usuario.tipo_cuenta === 'tatuador' || usuario.tipo_cuenta === 'estudio') &&
+         (usuario.slot_sobre_mi || usuario.slot_estilo || usuario.slot_agendar) && (
+          <div className="mb-6 space-y-3">
+            {usuario.slot_sobre_mi && (
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Sobre mí</p>
+                <p className="text-sm text-gray-700">{usuario.slot_sobre_mi}</p>
+              </div>
+            )}
+            {usuario.slot_estilo && (
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Mi estilo</p>
+                <p className="text-sm text-gray-700">{usuario.slot_estilo}</p>
+              </div>
+            )}
+            {usuario.slot_agendar && (
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Cómo agendar</p>
+                <p className="text-sm text-gray-700">{usuario.slot_agendar}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Stats */}
         <div className="flex gap-8 mb-8">
