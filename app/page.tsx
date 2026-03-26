@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import LandingSearch from '@/components/LandingSearch'
 import AnimatedTagline from '@/components/AnimatedTagline'
-import { getLandingPhotos, getPhotoCount, getLandingCarpetas, getTopTatuadores, getWeeklyStats } from '@/lib/queries'
+import { getLandingPhotos, getPhotoCount, getLandingCarpetas, getTopTatuadores, getWeeklyStats, getPhotosPage } from '@/lib/queries'
 import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
@@ -13,15 +13,17 @@ const POPULAR_TAGS_EN = ['floral', 'moon', 'butterfly', 'minimalist', 'letters',
 export default async function Home() {
   const t = await getTranslations('Landing')
 
-  const [bgPhotos, total, carpetasData, topTatuadores, weeklyStats] = await Promise.all([
+  const [bgPhotos, total, carpetasData, topTatuadores, weeklyStats, simPhotosRes] = await Promise.all([
     getLandingPhotos(6),
     getPhotoCount(),
     getLandingCarpetas(4),
     getTopTatuadores(1),
     getWeeklyStats(),
+    getPhotosPage(1, 3, undefined, 'guardados'),
   ])
 
   const featuredTatuador = topTatuadores[0] ?? null
+  const fotosSimulador = simPhotosRes.photos.slice(0, 3)
 
   const countLabel = total > 0
     ? t('counter', { count: total.toLocaleString('es') })
@@ -174,6 +176,35 @@ export default async function Home() {
                 )}
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECCIÓN: Probador ──────────────────────────── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-light mb-3" style={{fontFamily:'Georgia,serif'}}>
+              ¿Cómo te quedará?
+            </h2>
+            <p className="text-gray-400 text-sm max-w-md mx-auto">
+              Elige cualquier diseño, escríbelo en tu estilo favorito y vélo en tu piel antes de tatuarte
+            </p>
+          </div>
+          {fotosSimulador.length > 0 && (
+            <div className="grid grid-cols-3 gap-3 mb-10 max-w-2xl mx-auto">
+              {fotosSimulador.map(foto => (
+                <div key={foto.id} className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                  <Image src={foto.url} alt={foto.alt_text || 'tatuaje fine line'} width={200} height={200} className="w-full h-full object-cover" sizes="200px" />
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="text-center">
+            <Link href="/probar" className="inline-flex items-center gap-2 bg-gray-900 text-white px-10 py-4 rounded-full text-sm font-medium hover:bg-gray-700 transition-colors">
+              Probar gratis →
+            </Link>
+            <p className="text-xs text-gray-400 mt-3">Sin registrarte · Descarga tu resultado</p>
           </div>
         </div>
       </section>

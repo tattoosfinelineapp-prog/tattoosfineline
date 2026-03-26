@@ -19,7 +19,7 @@ const RESERVED = new Set([
   'galeria', 'buscar', 'mapa', 'feed', 'admin', 'upload', 'mensajes',
   'tendencias', 'buscar-artista', 'foto', 'perfil', 'onboarding', 'auth',
   'api', 'terminos', 'privacidad', 'cookies', 'dmca', 'tattoo', 'tablero',
-  'guardar', 'explorar', 'not-found', 'loading', '_next',
+  'guardar', 'explorar', 'not-found', 'loading', '_next', 'probar',
 ])
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

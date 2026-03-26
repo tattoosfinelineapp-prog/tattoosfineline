@@ -119,6 +119,9 @@ export default function NavBar() {
             )}
             {user ? (
               <>
+                <Link href="/probar" className="text-sm text-gray-500 hover:text-gray-900 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors">
+                  Probar
+                </Link>
                 <NotificacionesCampana />
                 <Link href="/upload"
                   className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
