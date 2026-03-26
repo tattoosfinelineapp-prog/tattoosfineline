@@ -116,8 +116,19 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
+            {/* Want button — prominent */}
+            <button
+              onClick={() => user ? toggleWant(tattoo.id) : openAuthModal()}
+              className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold transition-colors mb-3 ${
+                isWanted ? 'bg-orange-500 text-white' : 'bg-gray-900 text-white hover:bg-gray-800'
+              }`}
+            >
+              <Flame size={18} fill={isWanted ? 'currentColor' : 'none'} />
+              {isWanted ? '¡Lo quieres!' : 'Quiero algo así'}
+            </button>
+
+            {/* Secondary actions */}
+            <div className="flex items-center gap-2 mb-4">
               <button
                 onClick={() => user ? toggleLove(tattoo.id) : openAuthModal()}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
@@ -125,16 +136,6 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
                 }`}
               >
                 <Heart size={16} fill={isLoved ? 'currentColor' : 'none'} />
-                Me encanta
-              </button>
-              <button
-                onClick={() => user ? toggleWant(tattoo.id) : openAuthModal()}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                  isWanted ? 'bg-orange-50 text-orange-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <Flame size={16} fill={isWanted ? 'currentColor' : 'none'} />
-                Lo quiero
               </button>
               <button
                 onClick={() => user ? openSaveModal(tattoo.id) : openAuthModal()}
@@ -143,7 +144,6 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
                 }`}
               >
                 <Bookmark size={16} fill={isSaved ? 'currentColor' : 'none'} />
-                Guardar
               </button>
               <button
                 onClick={share}
@@ -160,7 +160,7 @@ export default function PhotoModal({ tattoo, onClose }: Props) {
                 <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Más como esto</p>
                 <div className="grid grid-cols-3 gap-1.5">
                   {similares.map(s => (
-                    <Link key={s.id} href={`/tattoo/${s.id}`} onClick={onClose} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                    <Link key={s.id} href={`/foto/${s.id}`} onClick={onClose} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
                       <Image src={s.url} alt="" width={120} height={120} className="w-full h-full object-cover hover:scale-105 transition-transform" />
                     </Link>
                   ))}

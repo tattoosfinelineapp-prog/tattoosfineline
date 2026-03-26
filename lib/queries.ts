@@ -435,3 +435,37 @@ export async function getCarpetas(userId: string): Promise<Carpeta[]> {
   if (error) return []
   return data as Carpeta[]
 }
+
+export type WeeklyStats = {
+  totalPhotos: number
+  totalArtists: number
+  topTag: string | null
+  topPhoto: { id: string; url: string; likes: number } | null
+}
+
+export async function getWeeklyStats(): Promise<WeeklyStats> {
+  if (!hasEnvVars()) return { totalPhotos: 0, totalArtists: 0, topTag: null, topPhoto: null }
+  const client = getClient()
+
+  const [photoCount, artistCount, topPhotoRes, recentRes] = await Promise.all([
+    client.from('photos').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+    client.from('users').select('id', { count: 'exact', head: true }).in('tipo_cuenta', ['tatuador', 'estudio']),
+    client.from('photos').select('id, url, likes').eq('status', 'published').order('likes', { ascending: false }).limit(1),
+    client.from('photos').select('tags').eq('status', 'published')
+      .gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(200),
+  ])
+
+  // Find top tag this week
+  const tagCounts: Record<string, number> = {}
+  for (const p of recentRes.data ?? []) {
+    for (const tag of (p.tags as string[]) ?? []) tagCounts[tag] = (tagCounts[tag] || 0) + 1
+  }
+  const topTag = Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+
+  return {
+    totalPhotos: photoCount.count ?? 0,
+    totalArtists: artistCount.count ?? 0,
+    topTag,
+    topPhoto: topPhotoRes.data?.[0] ?? null,
+  }
+}

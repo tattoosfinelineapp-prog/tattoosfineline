@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import LandingSearch from '@/components/LandingSearch'
 import AnimatedTagline from '@/components/AnimatedTagline'
-import { getLandingPhotos, getPhotoCount, getLandingCarpetas, getTopTatuadores } from '@/lib/queries'
+import { getLandingPhotos, getPhotoCount, getLandingCarpetas, getTopTatuadores, getWeeklyStats } from '@/lib/queries'
 import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
@@ -13,11 +13,12 @@ const POPULAR_TAGS_EN = ['floral', 'moon', 'butterfly', 'minimalist', 'letters',
 export default async function Home() {
   const t = await getTranslations('Landing')
 
-  const [bgPhotos, total, carpetasData, topTatuadores] = await Promise.all([
+  const [bgPhotos, total, carpetasData, topTatuadores, weeklyStats] = await Promise.all([
     getLandingPhotos(6),
     getPhotoCount(),
     getLandingCarpetas(4),
     getTopTatuadores(1),
+    getWeeklyStats(),
   ])
 
   const featuredTatuador = topTatuadores[0] ?? null
@@ -254,7 +255,37 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ── SECCIÓN 5: CTA final ─────────────────────────── */}
+      {/* ── SECCIÓN 5: Estadísticas ──────────────────────── */}
+      <section className="py-16 px-6 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-6 bg-gray-50 rounded-2xl">
+              <p className="text-3xl font-bold text-gray-900">{weeklyStats.totalPhotos.toLocaleString('es')}</p>
+              <p className="text-xs text-gray-400 mt-1">tatuajes publicados</p>
+            </div>
+            <div className="text-center p-6 bg-gray-50 rounded-2xl">
+              <p className="text-3xl font-bold text-gray-900">{weeklyStats.totalArtists.toLocaleString('es')}</p>
+              <p className="text-xs text-gray-400 mt-1">tatuadores</p>
+            </div>
+            {weeklyStats.topTag && (
+              <Link href={`/galeria?q=${encodeURIComponent(weeklyStats.topTag)}`} className="text-center p-6 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                <p className="text-lg font-bold text-gray-900">#{weeklyStats.topTag}</p>
+                <p className="text-xs text-gray-400 mt-1">tendencia esta semana</p>
+              </Link>
+            )}
+            {weeklyStats.topPhoto && (
+              <Link href={`/foto/${weeklyStats.topPhoto.id}`} className="relative rounded-2xl overflow-hidden bg-gray-100 aspect-square md:aspect-auto">
+                <Image src={weeklyStats.topPhoto.url} alt="" fill className="object-cover" sizes="200px" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
+                  <p className="text-xs text-white font-medium">Foto de la semana</p>
+                </div>
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECCIÓN 6: CTA final ─────────────────────────── */}
       <section className="py-24 px-6 bg-gray-900">
         <div className="max-w-xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-semibold text-white mb-4 leading-tight">

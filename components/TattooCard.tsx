@@ -2,30 +2,24 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Heart, Flame, Bookmark, User, MapPin } from 'lucide-react'
+import { Heart, Bookmark, User, MapPin } from 'lucide-react'
 import type { Tattoo } from '@/lib/data'
 import { useAuth } from './AuthContext'
 import ReportButton from './ReportButton'
 import PhotoModal from './PhotoModal'
 
 export default function TattooCard({ tattoo, isLocal }: { tattoo: Tattoo; isLocal?: boolean }) {
-  const { user, lovedIds, wantedIds, savedIds, toggleLove, toggleWant, openSaveModal, openAuthModal } = useAuth()
+  const { user, lovedIds, savedIds, toggleLove, openSaveModal, openAuthModal } = useAuth()
   const [hovered, setHovered] = useState(false)
   const [imgError, setImgError] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
 
   const isLoved = lovedIds.has(tattoo.id)
-  const isWanted = wantedIds.has(tattoo.id)
   const isSaved = savedIds.has(tattoo.id)
 
   const handleLove = (e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation()
     user ? toggleLove(tattoo.id) : openAuthModal()
-  }
-
-  const handleWant = (e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation()
-    user ? toggleWant(tattoo.id) : openAuthModal()
   }
 
   const handleSave = (e: React.MouseEvent) => {
@@ -60,7 +54,7 @@ export default function TattooCard({ tattoo, isLocal }: { tattoo: Tattoo; isLoca
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             loading="lazy"
             placeholder="blur"
-            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PC9zdmc+"
             onError={() => setImgError(true)}
           />
         )}
@@ -88,14 +82,10 @@ export default function TattooCard({ tattoo, isLocal }: { tattoo: Tattoo; isLoca
               </div>
               <span className="text-xs text-white font-medium drop-shadow truncate">{tattoo.tatuador}</span>
             </div>
-            <div className="flex items-center gap-2 shrink-0 ml-2">
-              <button onClick={handleLove} className="flex items-center gap-0.5 text-white">
-                <Heart size={13} fill={isLoved ? '#E60023' : 'none'} stroke={isLoved ? '#E60023' : 'white'} className="drop-shadow" />
-              </button>
-              <button onClick={handleWant} className="flex items-center gap-0.5 text-white">
-                <Flame size={13} fill={isWanted ? '#FF6B00' : 'none'} stroke={isWanted ? '#FF6B00' : 'white'} className="drop-shadow" />
-              </button>
-            </div>
+            <button onClick={handleLove} className="flex items-center gap-1 text-white shrink-0 ml-2">
+              <Heart size={14} fill={isLoved ? '#E60023' : 'none'} stroke={isLoved ? '#E60023' : 'white'} className={`drop-shadow transition-transform ${isLoved ? 'scale-110' : ''}`} />
+              <span className="text-xs drop-shadow">{tattoo.likes}</span>
+            </button>
           </div>
         </div>
       </div>
